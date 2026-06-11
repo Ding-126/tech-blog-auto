@@ -15,8 +15,13 @@ theme = "paper"
     url = "/archives/"
     weight = 1
 
+# RSS 不要用默认的 index.xml，否则 Vercel 根路径会优先返回 XML 而非 HTML 首页
+[outputFormats.RSS]
+  mediaType = "application/rss+xml"
+  baseName = "rss"
+
 [outputs]
-  home = ["HTML", "RSS", "JSON"]
+  home = ["HTML", "RSS"]
 
 [sitemap]
   changefreq = "daily"
