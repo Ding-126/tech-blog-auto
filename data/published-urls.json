@@ -4,5 +4,11 @@
     "title": "AI Agent 大闹 Fedora：当自主代码成为供应链攻击的掩护",
     "post": "content/posts/ai-agent-fedora-rogue.md",
     "published_at": "2026-06-12T00:12:51.826237+08:00"
+  },
+  {
+    "url": "https://github.com/huggingface/open-r1",
+    "title": "HuggingFace Open-R1：开源复现 DeepSeek-R1 推理能力的完整路径",
+    "post": "content/posts/open-r1-deepseek-reproduction.md",
+    "published_at": "2026-06-12T06:02:39.887957+08:00"
   }
 ]
