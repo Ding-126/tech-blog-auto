@@ -1,7 +1,7 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://tech-blog-auto.vercel.app/'
 # languageCode = 'en-us'
 languageCode = "zh-cn"
-title = '分享博客'
+title = '技术分享博客'
 theme = "paper"
 
 
