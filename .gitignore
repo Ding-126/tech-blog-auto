@@ -1,5 +1,9 @@
-
 public/
 resources/
 .hugo_build.lock
 .DS_Store
+
+# 抓取脚本的临时数据（每次 Cron 重新生成）
+data/hn-top.json
+data/gh-trending.json
+data/trends-merged.json
