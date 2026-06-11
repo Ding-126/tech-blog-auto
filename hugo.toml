@@ -1,0 +1,23 @@
+baseURL = 'https://example.org/'
+# languageCode = 'en-us'
+languageCode = "zh-cn"
+title = '分享博客'
+theme = "paper"
+
+
+[params]
+  author = "丁先森"
+  description = "ai 自动更新的 Java、大数据与 AI 技术摘要"
+
+[menu]
+  [[menu.main]]
+    name = "归档"
+    url = "/archives/"
+    weight = 1
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[sitemap]
+  changefreq = "daily"
+  priority = 0.5
