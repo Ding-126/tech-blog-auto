@@ -7,3 +7,6 @@ resources/
 data/hn-top.json
 data/gh-trending.json
 data/trends-merged.json
+
+# 本地密钥（GITHUB_TOKEN 等）
+.env

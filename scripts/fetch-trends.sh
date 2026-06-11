@@ -6,6 +6,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT_DIR="$ROOT/data"
 mkdir -p "$OUT_DIR"
 
+# 可选：从 blog-repo/.env 加载 GITHUB_TOKEN（勿提交 git）
+if [ -f "$ROOT/.env" ]; then
+  set -a
+  # shellcheck source=/dev/null
+  . "$ROOT/.env"
+  set +a
+fi
+
 # macOS / Linux 兼容：昨天日期
 if date -v-1d +%Y-%m-%d >/dev/null 2>&1; then
   YESTERDAY=$(date -v-1d +%Y-%m-%d)
