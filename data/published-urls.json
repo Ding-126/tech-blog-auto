@@ -22,5 +22,11 @@
     "title": "Codex 搭 AI 热点雷达，2 小时搞定自动抓取",
     "post": "content/posts/codex-ai-hotspot-radar.md",
     "published_at": "2026-06-13T06:02:55.257933+08:00"
+  },
+  {
+    "url": "https://juejin.cn/post/7648152309277933608",
+    "title": "别再裸用 Claude Code 了：6 个 MCP + 4 条工作流，让 AI 真正帮你干活",
+    "post": "content/posts/claude-code-mcp-workflows.md",
+    "published_at": "2026-06-14T06:02:04.595457+08:00"
   }
 ]
