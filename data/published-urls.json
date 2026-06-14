@@ -28,5 +28,11 @@
     "title": "别再裸用 Claude Code 了：6 个 MCP + 4 条工作流，让 AI 真正帮你干活",
     "post": "content/posts/claude-code-mcp-workflows.md",
     "published_at": "2026-06-14T06:02:04.595457+08:00"
+  },
+  {
+    "url": "https://juejin.cn/post/7649633479534182436",
+    "title": "把 GitNexus 接进 Codex：安装、索引、Web UI 和项目分析实操",
+    "post": "content/posts/gitnexus-codex-integration.md",
+    "published_at": "2026-06-15T06:46:46.028181+08:00"
   }
 ]
