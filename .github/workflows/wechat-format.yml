@@ -1,0 +1,35 @@
+name: 排版文章（供本地发布使用）
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/posts/*.md'
+  workflow_dispatch:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装依赖
+        run: |
+          git clone --depth=1 https://github.com/xiaohuailabs/xiaohu-wechat-format.git /tmp/wechat-format-tool
+          pip install --quiet markdown requests
+
+      - name: 排版所有文章
+        run: |
+          for file in content/posts/*.md; do
+            slug=$(basename "$file" .md)
+            [ "$slug" = "hello-world" ] && continue
+            # 检查是否已排版
+            [ -f "distribution/wechat/${slug}.html" ] && echo "⏭️ $slug 已排版" && continue
+            echo "→ $slug"
+            python3 scripts/ci-wechat-format.py "$file"
+          done
+
+      - name: 提交排版结果
+        run: |
+          git config user.name "dudu"
+          git config user.email "dudu@users.noreply.github.com"
+          git add distribution/ 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "chore: 排版更新 [skip ci]" && git push)

@@ -5,6 +5,11 @@ from pathlib import Path
 import requests
 
 TOOL_DIR = "/tmp/wechat-format-tool"
+if not os.path.exists(TOOL_DIR):
+    TOOL_DIR = os.path.expanduser("~/.hermes/skills/xiaohu-wechat-format")
+if not os.path.exists(TOOL_DIR):
+    TOOL_DIR = "/Users/dudu/workspace-daliy/xiaohu-wechat-format"
+print(f"🔧 {TOOL_DIR}")
 
 def fix_format_py(slug):
     """修复 format.py 的语法高亮 bug：将注释高亮移到最后"""
