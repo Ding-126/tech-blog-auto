@@ -26,6 +26,7 @@ jobs:
         run: |
           echo "DEBUG: WECHAT_APP_ID=$WECHAT_APP_ID"
           echo "DEBUG: WECHAT_APP_ID len=${#WECHAT_APP_ID}"
+          curl -s https://api.ipify.org && echo " <- 当前 Actions IP"
           for file in content/posts/*.md; do
             slug=$(basename "$file" .md)
             [ "$slug" = "hello-world" ] && continue
