@@ -14,7 +14,7 @@ theme = "paper"
 # Google Search Console verification
 [params.verification]
   google = "PmyIlNFTS9Rf3zqtQLawIqiUt-Baunkz1NuEVkg49jw"
-#   bing = "xxxxxxxxxxx"
+  bing = "30E08781BF7017B4CB5091D1E2507299"
 
 # Google Analytics (替换 G-XXXXXXXXXX 为你的 GA4 测量 ID)
 # [services.googleAnalytics]
