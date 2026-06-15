@@ -34,5 +34,11 @@
     "title": "把 GitNexus 接进 Codex：安装、索引、Web UI 和项目分析实操",
     "post": "content/posts/gitnexus-codex-integration.md",
     "published_at": "2026-06-15T06:46:46.028181+08:00"
+  },
+  {
+    "url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html",
+    "title": "Java Optional 实战：消灭 NullPointerException 的 10 个模式（附代码）",
+    "post": "content/posts/java-optional-10-patterns-npe-guide.md",
+    "published_at": "2026-06-15T15:12:58.852824+08:00"
   }
 ]
