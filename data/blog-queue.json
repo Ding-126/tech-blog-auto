@@ -102,6 +102,19 @@
       },
       "updated_at": "2026-06-15T13:27:03.677252+08:00",
       "published_at": "2026-06-12T06:02:39.887957+08:00"
+    },
+    {
+      "slug": "java-optional-10-patterns-npe-guide",
+      "title": "Java Optional 实战：消灭 NullPointerException 的 10 个模式（附代码）",
+      "source_url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/java-optional-10-patterns-npe-guide.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-15T15:13:03.636367+08:00",
+      "updated_at": "2026-06-15T15:13:03.636635+08:00"
     }
   ],
   "synced_at": "2026-06-15T13:27:03.678322+08:00"
