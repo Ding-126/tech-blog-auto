@@ -1,0 +1,33 @@
+name: 公众号自动发布
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/posts/*.md'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 安装依赖
+        run: |
+          git clone --depth=1 https://github.com/xiaohuailabs/xiaohu-wechat-format.git /tmp/wechat-format-tool
+          pip install --quiet markdown requests
+
+      - name: 发布新增文章到公众号
+        env:
+          WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+          WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+        run: |
+          for file in content/posts/*.md; do
+            slug=$(basename "$file" .md)
+            # 跳过 hello-world
+            [ "$slug" = "hello-world" ] && continue
+            echo "→ $slug"
+            python3 scripts/ci-wechat-publish.py "$file"
+          done
