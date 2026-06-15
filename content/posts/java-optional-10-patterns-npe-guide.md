@@ -11,7 +11,7 @@ difficulty = '入门'
 target_keywords = ['Java Optional', 'Optional 使用', 'NPE 防护', 'Java 空指针', 'Optional 实战']
 +++
 
-说实话，做了这么多年 Java，最让我烦的不是业务逻辑有多复杂，而是**每写一行代码都要担心会不会报 NPE**。
+说实话，做了这么多年 Java，最让我烦的,不是业务逻辑有多复杂，而是**每写一行代码都要担心会不会报 NPE**。
 
 你肯定也写过这种代码：
 
