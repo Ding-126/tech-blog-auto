@@ -63,14 +63,18 @@ def main():
     with open(tmp, 'w', encoding='utf-8') as f:
         f.write(text)
 
-    # 配置凭证
+    # 配置 wechat 凭证（从环境变量读取）
     config_path = f"{tool_dir}/config.json"
-    with open(config_path, encoding='utf-8') as f:
-        config = json.load(f)
-    app_id = os.environ.get("WECHAT_APP_ID", "")
-    app_secret = os.environ.get("WECHAT_APP_SECRET", "")
-    config["wechat"]["app_id"] = app_id
-    config["wechat"]["app_secret"] = app_secret
+    if not os.path.exists(config_path):
+        config = {
+            "wechat": {"app_id": "", "app_secret": "", "author": ""},
+            "settings": {"default_theme": "newspaper", "auto_open_browser": false}
+        }
+    else:
+        with open(config_path, encoding='utf-8') as f:
+            config = json.load(f)
+    config["wechat"]["app_id"] = os.environ.get("WECHAT_APP_ID", "")
+    config["wechat"]["app_secret"] = os.environ.get("WECHAT_APP_SECRET", "")
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
