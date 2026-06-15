@@ -131,9 +131,14 @@ def main():
         return
     print(f"📋 slug: {slug}")
 
-    # 去掉 front matter
+    # 保留标题（format.py 会用它做 H1 和目录名）
+    text = f'# {title}\n\n' + text.strip()
+    # 去掉 front matter 格式（但保留 # 标题）
     text = re.sub(r'^\+{3}\n.*?\+{3}\n', '', text, flags=re.DOTALL)
     text = re.sub(r'^---\n.*?---\n', '', text, flags=re.DOTALL)
+    # 确保 # 标题在开头
+    if not text.startswith('# '):
+        text = f'# {title}\n\n' + text
     tmp = f"/tmp/article-{slug}.md"
     with open(tmp, 'w', encoding='utf-8') as f:
         f.write(text.strip())
@@ -170,15 +175,15 @@ def main():
          "--output", "/tmp/wechat-out/", "--no-open"],
         capture_output=True, text=True, cwd=TOOL_DIR
     )
-    print(r.stdout)
-    if r.returncode != 0:
-        print("❌ 排版失败:", r.stderr); sys.exit(1)
-
-    # 找输出（按修改时间取最新的）
-    candidates = list(Path("/tmp/wechat-out/").rglob("preview.html"))
-    if not candidates:
-        print("❌ 未找到排版输出"); sys.exit(1)
-    preview_path = str(max(candidates, key=lambda p: p.stat().st_mtime))
+    # 从 stdout 解析预览路径
+    preview_path = ""
+    for line in r.stdout.split('\n'):
+        if '排版成品:' in line:
+            preview_path = line.split(':', 1)[1].strip()
+            break
+    if not preview_path:
+        print(r.stdout)
+        print("❌ 无法解析排版输出路径"); sys.exit(1)
     print(f"📄 {preview_path}")
 
     # 提取正文
