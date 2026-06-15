@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 抓取 Hacker News Top +（可选）GitHub 新热门仓库，写入 data/
+# 抓取 HN +（可选）GitHub + 掘金 + 36氪，写入 data/
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -72,15 +72,35 @@ else
   echo "==> Skip GitHub trending (set GITHUB_TOKEN to enable)"
 fi
 
+echo "==> Fetching Juejin hot lists..."
+"$ROOT/scripts/fetch-juejin.sh"
+
+if [ -x "$ROOT/scripts/fetch-36kr.sh" ]; then
+  echo "==> Fetching 36kr RSS..."
+  "$ROOT/scripts/fetch-36kr.sh"
+else
+  echo "==> Skip 36kr (scripts/fetch-36kr.sh not found)"
+fi
+
 # 合并为一份供 Hermes 选题
 python3 -c "
 import json, pathlib
 root = pathlib.Path('$OUT_DIR')
 merged = []
-for name in ('hn-top.json', 'gh-trending.json'):
+for name in ('hn-top.json', 'gh-trending.json', 'juejin-hot.json', '36kr-feed.json'):
     p = root / name
     if p.exists():
         merged.extend(json.loads(p.read_text()))
+SOURCE_BOOST = {
+    'juejin': 1.2,
+    '36kr': 1.0,
+    'hn': 1.0,
+    'github': 0.8,
+}
+for item in merged:
+    src = item.get('source', '')
+    boost = SOURCE_BOOST.get(src, 1.0)
+    item['score'] = int(item.get('score', 0) * boost)
 merged.sort(key=lambda x: x.get('score', 0), reverse=True)
 (root / 'trends-merged.json').write_text(
     json.dumps(merged, ensure_ascii=False, indent=2) + '\n'

@@ -1,13 +1,24 @@
 baseURL = 'https://tech-blog-auto.vercel.app/'
-# languageCode = 'en-us'
 languageCode = "zh-cn"
-title = '技术分享博客'
+title = '丁先森的技术博客'
 theme = "paper"
-
 
 [params]
   author = "丁先森"
-  description = "ai 自动更新的 Java、大数据与 AI 技术摘要"
+  description = "Java、Spring Boot、大数据与 AI Agent 实战教程。每天一篇技术干货，帮你提升开发技能、探索副业可能。"
+  name = "丁先森"
+  bio = "Java / 大数据开发者，探索 AI 自动化与副业可能性"
+  # mainSections controls which content sections appear on the homepage
+  mainSections = ["posts"]
+
+# Google Search Console verification (当你拿到 meta code 后填入)
+# [params.verification]
+#   google = "xxxxxxxxxxx"
+#   bing = "xxxxxxxxxxx"
+
+# Google Analytics (替换 G-XXXXXXXXXX 为你的 GA4 测量 ID)
+# [services.googleAnalytics]
+#   ID = "G-XXXXXXXXXX"
 
 [menu]
   [[menu.main]]

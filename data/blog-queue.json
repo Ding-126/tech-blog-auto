@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "slug": "wesight-agent-workspace",
+      "title": "AI Agent 多了桌面乱？WeSight 统一工位来管",
+      "source_url": "https://github.com/freestylefly/wesight",
+      "status": "draft",
+      "paths": {
+        "post": null,
+        "draft": "content/drafts/wesight-agent-workspace.md",
+        "queue": null
+      },
+      "updated_at": "2026-06-15T13:27:03.677966+08:00"
+    },
+    {
+      "slug": "ai-agent-dev-skills-2026",
+      "title": "2026 年做 AI Agent，你得会这 10 件事",
+      "source_url": "https://juejin.cn/post/7648894966207152180",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/ai-agent-dev-skills-2026.md",
+        "draft": null,
+        "queue": null
+      },
+      "updated_at": "2026-06-15T13:27:03.675318+08:00",
+      "published_at": "2026-06-12T09:30:42.314740+08:00"
+    },
+    {
+      "slug": "ai-agent-fedora-rogue",
+      "title": "AI Agent 大闹 Fedora：当自主代码成为供应链攻击的掩护",
+      "source_url": "https://lwn.net/SubscriberLink/1077035/c7e7c14fbd60fae9/",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/ai-agent-fedora-rogue.md",
+        "draft": null,
+        "queue": null
+      },
+      "updated_at": "2026-06-15T13:27:03.675897+08:00",
+      "published_at": "2026-06-12T00:12:51.826237+08:00"
+    },
+    {
+      "slug": "claude-code-mcp-workflows",
+      "title": "别再裸用 Claude Code 了：6 个 MCP + 4 条工作流，让 AI 真正帮你干活",
+      "source_url": "https://juejin.cn/post/7648152309277933608",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/claude-code-mcp-workflows.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-14T06:02:04.595457+08:00",
+      "updated_at": "2026-06-15T13:27:03.676227+08:00"
+    },
+    {
+      "slug": "codex-ai-hotspot-radar",
+      "title": "Codex 搭 AI 热点雷达，2 小时搞定自动抓取",
+      "source_url": "https://juejin.cn/post/7649329229150650378",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/codex-ai-hotspot-radar.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-13T06:02:55.257933+08:00",
+      "updated_at": "2026-06-15T13:27:03.676505+08:00"
+    },
+    {
+      "slug": "gitnexus-codex-integration",
+      "title": "把 GitNexus 接进 Codex：安装、索引、Web UI 和项目分析实操",
+      "source_url": "https://juejin.cn/post/7649633479534182436",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/gitnexus-codex-integration.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-15T06:46:46.028181+08:00",
+      "updated_at": "2026-06-15T13:27:03.676810+08:00"
+    },
+    {
+      "slug": "hello-world",
+      "title": "Hello World：博客搭建成功",
+      "source_url": "",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/hello-world.md",
+        "draft": null,
+        "queue": null
+      },
+      "updated_at": "2026-06-15T13:27:03.677031+08:00"
+    },
+    {
+      "slug": "open-r1-deepseek-reproduction",
+      "title": "HuggingFace Open-R1：开源复现 DeepSeek-R1 推理能力的完整路径",
+      "source_url": "https://github.com/huggingface/open-r1",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/open-r1-deepseek-reproduction.md",
+        "draft": null,
+        "queue": null
+      },
+      "updated_at": "2026-06-15T13:27:03.677252+08:00",
+      "published_at": "2026-06-12T06:02:39.887957+08:00"
+    }
+  ],
+  "synced_at": "2026-06-15T13:27:03.678322+08:00"
+}

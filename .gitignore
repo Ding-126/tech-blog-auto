@@ -6,6 +6,8 @@ resources/
 # 抓取脚本的临时数据（每次 Cron 重新生成）
 data/hn-top.json
 data/gh-trending.json
+data/juejin-hot.json
+data/36kr-feed.json
 data/trends-merged.json
 
 # 本地密钥（GITHUB_TOKEN 等）

@@ -63,4 +63,5 @@ fi
 SLUG="$(basename "$FILE" .md)"
 git commit -m "post: ${SLUG} [auto]"
 git push origin main
+python3 "$ROOT/scripts/blog_queue.py" register-published "$FILE" 2>/dev/null || true
 echo "Published: $FILE"
