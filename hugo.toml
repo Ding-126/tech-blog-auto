@@ -11,9 +11,9 @@ theme = "paper"
   # mainSections controls which content sections appear on the homepage
   mainSections = ["posts"]
 
-# Google Search Console verification (当你拿到 meta code 后填入)
-# [params.verification]
-#   google = "xxxxxxxxxxx"
+# Google Search Console verification
+[params.verification]
+  google = "PmyIlNFTS9Rf3zqtQLawIqiUt-Baunkz1NuEVkg49jw"
 #   bing = "xxxxxxxxxxx"
 
 # Google Analytics (替换 G-XXXXXXXXXX 为你的 GA4 测量 ID)
