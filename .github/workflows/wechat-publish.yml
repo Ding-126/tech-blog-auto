@@ -24,9 +24,10 @@ jobs:
           WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
           WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
         run: |
+          echo "DEBUG: WECHAT_APP_ID=$WECHAT_APP_ID"
+          echo "DEBUG: WECHAT_APP_ID len=${#WECHAT_APP_ID}"
           for file in content/posts/*.md; do
             slug=$(basename "$file" .md)
-            # 跳过 hello-world
             [ "$slug" = "hello-world" ] && continue
             echo "→ $slug"
             python3 scripts/ci-wechat-publish.py "$file"
