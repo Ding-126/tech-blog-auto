@@ -125,7 +125,7 @@ def main():
     # 发布到公众号草稿箱
     print("🚀 发布到公众号草稿箱...")
     try:
-        token = get_access_token(app_id, app_secret)
+        token = get_access_token(config["wechat"]["app_id"], config["wechat"]["app_secret"])
         print(f"✅ access_token 获取成功")
 
         # 上传封面图
