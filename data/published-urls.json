@@ -40,5 +40,11 @@
     "title": "Java Optional 实战：消灭 NullPointerException 的 10 个模式（附代码）",
     "post": "content/posts/java-optional-10-patterns-npe-guide.md",
     "published_at": "2026-06-15T15:12:58.852824+08:00"
+  },
+  {
+    "url": "https://juejin.cn/post/7650451521307770923",
+    "title": "小米开源 Claude Code 变体：3 个信号开发者必须关注",
+    "post": "content/posts/xiaomi-claude-code-opensource.md",
+    "published_at": "2026-06-15T18:03:42.730137+08:00"
   }
 ]
