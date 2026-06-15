@@ -117,9 +117,68 @@ def main():
     try:
         token = get_access_token(app_id, app_secret)
         print(f"✅ access_token 获取成功")
-        media_id = create_draft(token, title, body_html)
-        print(f"✅ 草稿创建成功！media_id: {media_id}")
-        print(f"   登录 https://mp.weixin.qq.com/ → 草稿箱 可查看和发布。")
+
+        # 上传封面图
+        print("📸 上传封面图...")
+        cover_path = os.path.join(os.path.dirname(__file__), "..", "static", "cover-default.png")
+        # 如果没有默认封面，用第一篇文章的封面图
+        if not os.path.exists(cover_path):
+            # 用之前生成的 SVG cover
+            cover_candidates = [
+                "/Users/dudu/workspace-daliy/副业探索/自动化推文流水线/cover-graalvm-comparison.png",
+                "/Users/dudu/workspace-daliy/副业探索/自动化推文流水线/cover-graalvm-comparison.svg",
+            ]
+            for p in cover_candidates:
+                if os.path.exists(p):
+                    cover_path = p
+                    break
+
+        with open(cover_path, "rb") as f:
+            r_img = requests.post(
+                f"https://api.weixin.qq.com/cgi-bin/material/add_material?access_token={token}&type=image",
+                files={"media": ("cover.png", f, "image/png" if cover_path.endswith('.png') else "image/svg+xml")},
+                timeout=15
+            )
+        img_data = r_img.json()
+        if "media_id" not in img_data:
+            raise Exception(f"上传封面失败: {img_data}")
+        thumb_id = img_data["media_id"]
+        print(f"✅ 封面上传成功: {thumb_id}")
+
+        # 读取排版后的 HTML
+        with open(preview_path, encoding='utf-8') as f:
+            full_html = f.read()
+
+        # 提取正文
+        s = full_html.find('<h1')
+        e = full_html.rfind('</section>')
+        body = full_html[s:e+10] if s > 0 and e > s else full_html
+        print(f"📄 正文长度: {len(body)} 字符")
+
+        # 调微信 API 创建草稿
+        draft_body = json.dumps({
+            "articles": [{
+                "title": title,
+                "content": body,
+                "thumb_media_id": thumb_id,
+                "need_open_comment": 0,
+                "only_fans_can_comment": 0
+            }]
+        }, ensure_ascii=False).encode("utf-8")
+
+        r_draft = requests.post(
+            f"https://api.weixin.qq.com/cgi-bin/draft/add?access_token={token}",
+            data=draft_body,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        draft_result = r_draft.json()
+        if "media_id" in draft_result:
+            print(f"✅ 草稿创建成功！media_id: {draft_result['media_id']}")
+            print(f"   登录 https://mp.weixin.qq.com/ → 草稿箱 可查看和发布。")
+        else:
+            raise Exception(f"创建草稿失败: {draft_result}")
+
     except Exception as e:
         print(f"❌ 发布失败: {e}")
         sys.exit(1)
