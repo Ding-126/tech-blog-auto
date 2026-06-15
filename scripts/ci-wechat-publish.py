@@ -1,10 +1,39 @@
 #!/usr/bin/env python3
-"""GitHub Actions 专用：排版文章并发布到公众号草稿箱"""
-import json, os, re, subprocess, sys, tempfile
+"""GitHub Actions 专用：排版文章并直接发布到公众号草稿箱"""
+import json, os, re, subprocess, sys
 from pathlib import Path
+import requests
+
+def get_access_token(app_id, app_secret):
+    url = "https://api.weixin.qq.com/cgi-bin/token"
+    resp = requests.get(url, params={
+        "grant_type": "client_credential",
+        "appid": app_id,
+        "secret": app_secret
+    }, timeout=10)
+    data = resp.json()
+    if "access_token" not in data:
+        raise Exception(f"获取 access_token 失败: {data}")
+    return data["access_token"]
+
+def create_draft(access_token, title, html_content):
+    url = f"https://api.weixin.qq.com/cgi-bin/draft/add?access_token={access_token}"
+    body = {
+        "articles": [{
+            "title": title,
+            "content": html_content,
+            "need_open_comment": 0,
+            "only_fans_can_comment": 0
+        }]
+    }
+    resp = requests.post(url, json=body, timeout=15)
+    data = resp.json()
+    if "media_id" not in data:
+        raise Exception(f"创建草稿失败: {data}")
+    return data["media_id"]
 
 def main():
-    changed_file = sys.argv[1]  # content/posts/xxx.md
+    changed_file = sys.argv[1]
     tool_dir = "/tmp/wechat-format-tool"
     os.makedirs("/tmp/wechat-out", exist_ok=True)
 
@@ -19,31 +48,34 @@ def main():
         m = re.search(r'''title\s*=\s*['"](.*?)['"]''', fm.group(1))
         if m:
             title = m.group(1)
+    if not title:
+        title = Path(changed_file).stem
+
+    print(f"📝 标题: {title}")
 
     # 去掉 front matter
     text = re.sub(r'^\+{3}\n.*?\+{3}\n', '', text, flags=re.DOTALL)
     text = re.sub(r'^---\n.*?---\n', '', text, flags=re.DOTALL)
-
-    # 插入 H1 标题
-    if title:
-        text = f'# {title}\n\n' + text.strip()
+    text = f'# {title}\n\n' + text.strip()
 
     # 写临时文件
     tmp = "/tmp/article.md"
     with open(tmp, 'w', encoding='utf-8') as f:
-        f.write(text.strip())
-    print(f"📝 排版: {title}")
+        f.write(text)
 
-    # 配置 wechat 凭证（从环境变量读取）
+    # 配置凭证
     config_path = f"{tool_dir}/config.json"
     with open(config_path, encoding='utf-8') as f:
         config = json.load(f)
-    config["wechat"]["app_id"] = os.environ.get("WECHAT_APP_ID", "")
-    config["wechat"]["app_secret"] = os.environ.get("WECHAT_APP_SECRET", "")
+    app_id = os.environ.get("WECHAT_APP_ID", "")
+    app_secret = os.environ.get("WECHAT_APP_SECRET", "")
+    config["wechat"]["app_id"] = app_id
+    config["wechat"]["app_secret"] = app_secret
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
     # 排版
+    print("📐 排版中...")
     result = subprocess.run(
         ["python3", f"{tool_dir}/scripts/format.py",
          "--input", tmp, "--theme", "newspaper",
@@ -55,25 +87,42 @@ def main():
         print("❌ 排版失败:", result.stderr)
         sys.exit(1)
 
-    # 找到输出目录
-    out_dir = list(Path("/tmp/wechat-out/").glob("*/preview.html"))
-    if not out_dir:
-        print("❌ 未找到排版输出")
+    # 找到排版输出的 HTML
+    out_dirs = list(Path("/tmp/wechat-out/").glob("*/preview.html"))
+    if not out_dirs:
+        # 试试 glob 其他路径
+        out_dirs = list(Path("/tmp/wechat-out/").rglob("preview.html"))
+    if not out_dirs:
+        print("❌ 未找到排版输出，目录内容:", list(Path("/tmp/wechat-out/").iterdir()))
         sys.exit(1)
-    article_dir = str(out_dir[0].parent)
+
+    preview_path = str(out_dirs[0])
+    print(f"📄 排版输出: {preview_path}")
+
+    # 读取排版后的 HTML
+    with open(preview_path, encoding='utf-8') as f:
+        full_html = f.read()
+
+    # 提取正文 HTML（去掉预览页的按钮/工具栏部分）
+    # 找到正文区域：在 <h1> 附近
+    body_start = full_html.find("<h1")
+    body_end = full_html.rfind("</section>")
+    if body_start > 0 and body_end > body_start:
+        body_html = full_html[body_start:body_end + 10]
+    else:
+        body_html = full_html
 
     # 发布到公众号草稿箱
     print("🚀 发布到公众号草稿箱...")
-    result = subprocess.run(
-        ["python3", f"{tool_dir}/scripts/publish.py",
-         "--dir", article_dir],
-        capture_output=True, text=True, cwd=tool_dir
-    )
-    print(result.stdout)
-    if result.returncode != 0:
-        print("❌ 发布失败:", result.stderr)
+    try:
+        token = get_access_token(app_id, app_secret)
+        print(f"✅ access_token 获取成功")
+        media_id = create_draft(token, title, body_html)
+        print(f"✅ 草稿创建成功！media_id: {media_id}")
+        print(f"   登录 https://mp.weixin.qq.com/ → 草稿箱 可查看和发布。")
+    except Exception as e:
+        print(f"❌ 发布失败: {e}")
         sys.exit(1)
-    print("✅ 草稿创建成功！登录公众号后台可查看和发布。")
 
 if __name__ == "__main__":
     main()
