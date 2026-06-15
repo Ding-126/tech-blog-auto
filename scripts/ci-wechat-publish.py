@@ -136,17 +136,14 @@ def main():
         return
     print(f"📋 slug: {slug}")
 
-    # 保留标题（format.py 会用它做 H1 和目录名）
-    text = f'# {title}\n\n' + text.strip()
-    # 去掉 front matter 格式（但保留 # 标题）
-    text = re.sub(r'^\+{3}\n.*?\+{3}\n', '', text, flags=re.DOTALL)
-    text = re.sub(r'^---\n.*?---\n', '', text, flags=re.DOTALL)
-    # 确保 # 标题在开头
-    if not text.startswith('# '):
-        text = f'# {title}\n\n' + text
+    # 先去掉 front matter，再加 # 标题
+    content_text = text
+    content_text = re.sub(r'^\+{3}\n.*?\+{3}\n', '', content_text, flags=re.DOTALL)
+    content_text = re.sub(r'^---\n.*?---\n', '', content_text, flags=re.DOTALL)
+    content_text = f'# {title}\n\n' + content_text.strip()
     tmp = f"/tmp/article-{slug}.md"
     with open(tmp, 'w', encoding='utf-8') as f:
-        f.write(text.strip())
+        f.write(content_text.strip())
 
     # 配置
     config_path = f"{TOOL_DIR}/config.json"
@@ -191,13 +188,49 @@ def main():
         print("❌ 无法解析排版输出路径"); sys.exit(1)
     print(f"📄 {preview_path}")
 
-    # 提取正文
-    with open(preview_path) as f:
-        html = f.read()
-    ex = ContentExtractor()
-    ex.feed(html)
-    body = ''.join(ex.parts) if ex.parts else html
-    print(f"📄 正文: {len(body)} 字符")
+    # 生成用于 API 的精简 HTML（不依赖 format.py 的富样式输出）
+    def make_wechat_html(content_text, title):
+        """极简 HTML，只带必要样式，不超 20000 字"""
+        import html as html_mod
+        lines = content_text.split('\n')
+        parts = []
+        in_code = False
+        buf = []
+        for line in lines:
+            s = line.strip()
+            if s.startswith('```'):
+                if in_code:
+                    code = '\n'.join(buf)
+                    code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                    parts.append(f'<pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:13px;line-height:1.5;overflow-x:auto">{code}</pre>')
+                    buf = []
+                    in_code = False
+                else:
+                    in_code = True
+                continue
+            if in_code:
+                buf.append(line)
+                continue
+            if s.startswith('# ') and not s.startswith('## '):
+                parts.append(f'<p style="font-weight:bold;font-size:20px;margin:16px 0 8px">{html_mod.escape(s[2:])}</p>')
+            elif s.startswith('## '):
+                parts.append(f'<p style="font-weight:bold;font-size:17px;margin:16px 0 6px">{html_mod.escape(s[3:])}</p>')
+            elif s.startswith('- '):
+                parts.append(f'<p style="margin:4px 0;padding-left:12px">\u2022 {html_mod.escape(s[2:])}</p>')
+            elif s.startswith('|'):
+                parts.append(f'<p style="margin:2px 0;font-size:13px;font-family:monospace">{html_mod.escape(s)}</p>')
+            elif s == '---':
+                parts.append('<hr style="border:none;border-top:1px solid #ddd;margin:16px 0"/>')
+            elif s:
+                # inline bold/code
+                cv = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html_mod.escape(line))
+                cv = re.sub(r'`(.+?)`', r'<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:13px">\1</code>', cv)
+                parts.append(f'<p style="margin:8px 0;font-size:15px;line-height:1.8">{cv}</p>')
+        return '\n'.join(parts)
+
+    body = make_wechat_html(content_text, title)
+    body_len = len(body)
+    print(f"📄 正文: {body_len} 字符")
 
     # 发布
     print("🚀 发布到公众号草稿箱...")
