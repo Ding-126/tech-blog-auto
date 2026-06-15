@@ -46,5 +46,11 @@
     "title": "小米开源 Claude Code 变体：3 个信号开发者必须关注",
     "post": "content/posts/xiaomi-claude-code-opensource.md",
     "published_at": "2026-06-15T18:03:42.730137+08:00"
+  },
+  {
+    "url": "https://testcontainers.com/guides/getting-started-with-testcontainers-for-java/",
+    "title": "Spring Boot 测试实战：Unit Test + Integration Test + Testcontainers",
+    "post": "content/posts/spring-boot-testcontainers-practice.md",
+    "published_at": "2026-06-16T07:10:28.197086+08:00"
   }
 ]
