@@ -67,8 +67,14 @@ def main():
     config_path = f"{tool_dir}/config.json"
     if not os.path.exists(config_path):
         config = {
-            "wechat": {"app_id": "", "app_secret": "", "author": ""},
-            "settings": {"default_theme": "newspaper", "auto_open_browser": False}
+            "output_dir": "/tmp/wechat-out",
+            "vault_root": "/tmp",
+            "settings": {
+                "default_theme": "newspaper",
+                "auto_open_browser": False,
+                "header_author_label": ""
+            },
+            "wechat": {"app_id": "", "app_secret": "", "author": "后端实战笔记"}
         }
     else:
         with open(config_path, encoding='utf-8') as f:
