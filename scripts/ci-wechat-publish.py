@@ -155,13 +155,29 @@ def main():
     # 发布
     print("🚀 发布到公众号草稿箱...")
     try:
-        # token
+        # 获取 token
         r = requests.get("https://api.weixin.qq.com/cgi-bin/token", params={
             "grant_type": "client_credential",
             "appid": config["wechat"]["app_id"],
             "secret": config["wechat"]["app_secret"]
         }, timeout=10)
-        token = r.json()["access_token"]
+        td = r.json()
+        if "access_token" not in td:
+            # 打印完整错误
+            print(f"❌ token 失败: {td}")
+            # 尝试自己加 IP 到白名单
+            import socket
+            my_ip = socket.gethostbyname(socket.gethostname())
+            # 或者从环境变量获取
+            my_ip = os.environ.get("RUNNER_IP", my_ip)
+            # 也试试从 ipify 获取
+            try:
+                my_ip = requests.get("https://api.ipify.org", timeout=5).text.strip()
+            except:
+                pass
+            print(f"当前 IP: {my_ip}, 需要加到微信IP白名单: {my_ip}/32")
+            sys.exit(1)
+        token = td["access_token"]
 
         # 上传封面
         cover = "static/cover-default.png"
