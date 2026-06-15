@@ -159,7 +159,7 @@ def main():
         json.dump(config, f, indent=2, ensure_ascii=False)
 
     # 修复 format.py bug
-    if fix_format_py():
+    if fix_format_py(slug):
         print("✅ 已修复 format.py 语法高亮")
 
     # 排版
