@@ -6,8 +6,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# 加载本地密钥
+[ -f ".env.wechat.local" ] && source ".env.wechat.local"
 TOOL_DIR="$HOME/.hermes/skills/xiaohu-wechat-format"
 TRACKING_FILE="data/wechat-published.json"
+WECHAT_FORMATTER="/Users/dudu/workspace-daliy/自动化推文流水线/wechat-format.sh"
 
 # 确保 tracking 文件存在
 [ -f "$TRACKING_FILE" ] || echo "[]" > "$TRACKING_FILE"
@@ -24,7 +27,7 @@ for file in content/posts/*.md; do
 
   echo "📝 $slug"
   # 排版
-  bash "$(dirname "$0")/../自动化推文流水线/wechat-format.sh" "$slug"
+  bash "$WECHAT_FORMATTER" "$slug"
   
   # 发布
   python3 scripts/ci-wechat-publish.py "$file" 2>&1 | tail -5
