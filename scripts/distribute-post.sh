@@ -88,14 +88,15 @@ $(echo "$BODY")
 WECHAT
 
 # 纯文本版本方便复制到公众号编辑器
-python3 -c "
-import sys, re
-text = open(sys.argv[1], encoding='utf-8').read()
-# 代码块标记保留，但去掉 \`\`\` 中的语言标记（微信不识别）
-text = re.sub(r'\`\`\`\w*\n', '\`\`\`\n', text)
-open(sys.argv[2], 'w', encoding='utf-8').write(text)
-print('Plain text version ready')
-" "$OUT_DIR/wechat/$SLUG.md" "$OUT_DIR/wechat/${SLUG}-plain.txt"
+python3 scripts/plain-text.py \
+  "$OUT_DIR/wechat/$SLUG.md" \
+  "$OUT_DIR/wechat/${SLUG}-plain.txt"
+
+# 微信公众号专用 HTML 版本（直接复制到公众号编辑器，比 MD 格式好）
+echo "生成微信公众号 HTML 版本..."
+TITLE="$TITLE" SOURCE_URL="$SOURCE_URL" python3 scripts/wechat-html.py \
+  "$OUT_DIR/wechat/$SLUG.md" \
+  "$OUT_DIR/wechat/${SLUG}.html"
 
 # ===== 2. 知乎格式 =====
 echo "生成知乎版本..."
