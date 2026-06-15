@@ -68,7 +68,7 @@ def main():
     if not os.path.exists(config_path):
         config = {
             "wechat": {"app_id": "", "app_secret": "", "author": ""},
-            "settings": {"default_theme": "newspaper", "auto_open_browser": false}
+            "settings": {"default_theme": "newspaper", "auto_open_browser": False}
         }
     else:
         with open(config_path, encoding='utf-8') as f:
