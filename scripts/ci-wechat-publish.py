@@ -169,66 +169,54 @@ def main():
     if fix_format_py(slug):
         print("✅ 已修复 format.py 语法高亮")
 
-    # 排版
+    # 排版（html 格式，干净输出）
     print("📐 排版中...")
     r = subprocess.run(
         ["python3", f"{TOOL_DIR}/scripts/format.py",
          "--input", tmp, "--theme", "newspaper",
+         "--format", "html",
          "--output", "/tmp/wechat-out/", "--no-open"],
         capture_output=True, text=True, cwd=TOOL_DIR
     )
-    # 从 stdout 解析预览路径
-    preview_path = ""
+    # 解析输出路径
+    out_path = ""
     for line in r.stdout.split('\n'):
-        if '排版成品:' in line:
-            preview_path = line.split(':', 1)[1].strip()
+        if '输出:' in line:
+            out_path = line.split(':', 1)[1].strip()
             break
-    if not preview_path:
+    if not out_path:
         print(r.stdout)
-        print("❌ 无法解析排版输出路径"); sys.exit(1)
-    print(f"📄 {preview_path}")
+        print("❌ 无法解析输出路径"); sys.exit(1)
+    print(f"📄 {out_path}")
 
-    # 生成用于 API 的精简 HTML（不依赖 format.py 的富样式输出）
-    def make_wechat_html(content_text, title):
-        """极简 HTML，只带必要样式，不超 20000 字"""
-        import html as html_mod
-        lines = content_text.split('\n')
-        parts = []
-        in_code = False
-        buf = []
-        for line in lines:
-            s = line.strip()
-            if s.startswith('```'):
-                if in_code:
-                    code = '\n'.join(buf)
-                    code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-                    parts.append(f'<pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:13px;line-height:1.5;overflow-x:auto">{code}</pre>')
-                    buf = []
-                    in_code = False
-                else:
-                    in_code = True
-                continue
-            if in_code:
-                buf.append(line)
-                continue
-            if s.startswith('# ') and not s.startswith('## '):
-                parts.append(f'<p style="font-weight:bold;font-size:20px;margin:16px 0 8px">{html_mod.escape(s[2:])}</p>')
-            elif s.startswith('## '):
-                parts.append(f'<p style="font-weight:bold;font-size:17px;margin:16px 0 6px">{html_mod.escape(s[3:])}</p>')
-            elif s.startswith('- '):
-                parts.append(f'<p style="margin:4px 0;padding-left:12px">\u2022 {html_mod.escape(s[2:])}</p>')
-            elif s.startswith('|'):
-                parts.append(f'<p style="margin:2px 0;font-size:13px;font-family:monospace">{html_mod.escape(s)}</p>')
-            elif s == '---':
-                parts.append('<hr style="border:none;border-top:1px solid #ddd;margin:16px 0"/>')
-            elif s:
-                # inline bold/code
-                cv = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html_mod.escape(line))
-                cv = re.sub(r'`(.+?)`', r'<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:13px">\1</code>', cv)
-                parts.append(f'<p style="margin:8px 0;font-size:15px;line-height:1.8">{cv}</p>')
-        return '\n'.join(parts)
+    # 读取干净 HTML
+    with open(out_path, encoding='utf-8') as f:
+        clean_html = f.read()
+    # 去掉开头的 H1（标题已在微信界面显示）
+    # 注意：H1 可能含 \n 换行，用非贪婪匹配
+    clean_html = re.sub(r'^<h1>.*?</h1>\n?', '', clean_html, count=1, flags=re.DOTALL)
 
-    body = make_wechat_html(content_text, title)
+    # 加轻量样式
+    styled = clean_html
+    # 代码块
+    styled = re.sub(
+        r'<pre><code class="[^"]*">',
+        '<pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:13px;line-height:1.5;overflow-x:auto"><code>',
+        styled
+    )
+    styled = styled.replace('<pre><code>', '<pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:13px;line-height:1.5;overflow-x:auto"><code>')
+    # 引用块
+    styled = re.sub(
+        r'<blockquote>',
+        '<blockquote style="border-left:3px solid #326891;padding:8px 12px;margin:12px 0;background:#f7f3ee">',
+        styled
+    )
+    # 表格
+    styled = re.sub(r'<table>', '<table style="border-collapse:collapse;width:100%;font-size:14px">', styled)
+    styled = re.sub(r'<th>', '<th style="border:1px solid #ddd;padding:6px;background:#f0f0f0">', styled)
+    styled = re.sub(r'<td>', '<td style="border:1px solid #ddd;padding:6px">', styled)
+
+    body = styled
     body_len = len(body)
     print(f"📄 正文: {body_len} 字符")
 
