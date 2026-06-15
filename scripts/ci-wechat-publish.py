@@ -159,10 +159,38 @@ def main():
         with open(preview_path, encoding='utf-8') as f:
             full_html = f.read()
 
-        # 提取正文
-        s = full_html.find('<h1')
-        e = full_html.rfind('</section>')
-        body = full_html[s:e+10] if s > 0 and e > s else full_html
+        # 提取正文（从 articleContent div 中提取）
+        import html.parser
+        class ContentExtractor(html.parser.HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.in_content = False
+                self.depth = 0
+                self.parts = []
+            def handle_starttag(self, tag, attrs):
+                if self.in_content:
+                    self.depth += 1
+                    attrs_str = ' '.join(f'{k}="{v}"' for k, v in attrs if k)
+                    self.parts.append(f'<{tag} {attrs_str}>' if attrs_str else f'<{tag}>')
+                elif tag == 'div':
+                    for k, v in attrs:
+                        if k == 'id' and v == 'articleContent':
+                            self.in_content = True
+                            self.depth = 0
+            def handle_endtag(self, tag):
+                if self.in_content:
+                    if self.depth > 0:
+                        self.parts.append(f'</{tag}>')
+                        self.depth -= 1
+                    else:
+                        self.in_content = False
+            def handle_data(self, data):
+                if self.in_content:
+                    self.parts.append(data)
+
+        extractor = ContentExtractor()
+        extractor.feed(full_html)
+        body = ''.join(extractor.parts) if extractor.parts else full_html
         print(f"📄 正文长度: {len(body)} 字符")
 
         # 调微信 API 创建草稿
