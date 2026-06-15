@@ -174,11 +174,11 @@ def main():
     if r.returncode != 0:
         print("❌ 排版失败:", r.stderr); sys.exit(1)
 
-    # 找输出
-    out = list(Path("/tmp/wechat-out/").rglob("preview.html"))
-    if not out:
+    # 找输出（按修改时间取最新的）
+    candidates = list(Path("/tmp/wechat-out/").rglob("preview.html"))
+    if not candidates:
         print("❌ 未找到排版输出"); sys.exit(1)
-    preview_path = str(out[0])
+    preview_path = str(max(candidates, key=lambda p: p.stat().st_mtime))
     print(f"📄 {preview_path}")
 
     # 提取正文
