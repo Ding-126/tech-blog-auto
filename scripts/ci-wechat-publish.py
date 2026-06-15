@@ -6,31 +6,68 @@ import requests
 
 TOOL_DIR = "/tmp/wechat-format-tool"
 
-def fix_format_py():
-    """修复 format.py 的 # 注释高亮导致颜色值泄漏的 bug"""
+def fix_format_py(slug):
+    """修复 format.py 的语法高亮 bug：将注释高亮移到最后"""
     fp = f"{TOOL_DIR}/scripts/format.py"
     if not os.path.exists(fp):
         return False
     with open(fp) as f:
         code = f.read()
-    old = '# 单行注释 // ... 和 # ...'
-    if old not in code:
-        return False
+    # 检查是否已修复
+    if "# 注释放最后" in code:
+        return True
+    # 找到 "def _basic_syntax_highlight" 函数
+    # 策略：在 return code_html 前添加注释高亮，然后原位置删除注释高亮
+    # 用简单方法：找到注释块开头和 return，交换位置
+
     lines = code.split('\n')
-    new_lines = []
-    skip_hash_comments = False
-    hash_comment_block = 0
-    for line in lines:
-        if '# 单行注释 // ... 和 # ...（排除 URL 中的 ://）' in line:
-            new_lines.append('    # 单行注释 // ...')
-            continue
-        if "r'#[^{]" in line:
-            hash_comment_block = 2
-            continue
-        if hash_comment_block > 0:
-            hash_comment_block -= 1
-            continue
-        new_lines.append(line)
+    # 找到三行标记位置
+    comment_start = None  # '# 单行注释'
+    hash_start = None     # "r'#[^{]"
+    return_idx = None     # 'return code_html'
+    decorator_end = None  # 装饰器后面的空行
+
+    for i, line in enumerate(lines):
+        if decorator_end is None and '(#c586c0)' in line and '装饰器' in lines[i-1]:
+            decorator_end = i + 2
+        if comment_start is None and '单行注释' in line:
+            comment_start = i
+        if hash_start is None and "r'#[^{]" in line:
+            hash_start = i
+        if return_idx is None and 'return code_html' in line and i > 50:
+            return_idx = i
+
+    if comment_start is None or return_idx is None:
+        return False
+
+    # 找到注释块结束（到 return 之前）
+    # 提取注释块
+    comment_lines = []
+    j = comment_start
+    while j < return_idx:
+        comment_lines.append(lines[j])
+        j += 1
+    # 注释块 + 后面的空白行
+    comment_block = '\n'.join(comment_lines).rstrip()
+
+    # 在 return 前插入 # 注释放最后 + 注释块
+    indent = '    '
+    insert_block = f"{indent}# 注释放最后——避免数字/关键字高亮污染\n{comment_block}"
+
+    # 从原位置删除注释块
+    new_lines = lines[:comment_start]
+    # 跳过原有注释行和空白行
+    j = comment_start
+    while j < return_idx:
+        j += 1
+    new_lines.extend(lines[j:])
+
+    # 在 return 前插入
+    for i in range(len(new_lines) - 1, -1, -1):
+        if new_lines[i].strip().startswith('return code_html'):
+            new_lines.insert(i, insert_block)
+            break
+
     with open(fp, 'w') as f:
         f.write('\n'.join(new_lines))
     return True
@@ -97,7 +134,7 @@ def main():
     # 去掉 front matter
     text = re.sub(r'^\+{3}\n.*?\+{3}\n', '', text, flags=re.DOTALL)
     text = re.sub(r'^---\n.*?---\n', '', text, flags=re.DOTALL)
-    tmp = "/tmp/article.md"
+    tmp = f"/tmp/article-{slug}.md"
     with open(tmp, 'w', encoding='utf-8') as f:
         f.write(text.strip())
 
@@ -208,6 +245,12 @@ def main():
         }
         if thumb_id:
             draft["articles"][0]["thumb_media_id"] = thumb_id
+
+        # 内容大小限制：微信限制 < 2万字符，超长截断
+        content_body = draft["articles"][0]["content"]
+        if len(content_body) > 18000:
+            print(f"⚠️ 内容过长 ({len(content_body)} 字符)，截断至 18000")
+            draft["articles"][0]["content"] = content_body[:18000]
 
         r3 = requests.post(
             f"https://api.weixin.qq.com/cgi-bin/draft/add?access_token={token}",
