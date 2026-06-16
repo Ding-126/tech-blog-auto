@@ -52,5 +52,11 @@
     "title": "Spring Boot 测试实战：Unit Test + Integration Test + Testcontainers",
     "post": "content/posts/spring-boot-testcontainers-practice.md",
     "published_at": "2026-06-16T07:10:28.197086+08:00"
+  },
+  {
+    "url": "https://juejin.cn/post/7650052991786401832",
+    "title": "Fable 5 系统提示被扒光：AI 已经开始「自己判断该不该删代码」",
+    "post": "content/posts/fable-5-system-prompt-leak.md",
+    "published_at": "2026-06-16T18:02:26.838501+08:00"
   }
 ]
