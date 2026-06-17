@@ -1,0 +1,232 @@
+<h2>开头</h2>
+<p>聊分布式锁之前，先问一句：你项目里的分布式锁真的安全吗？</p>
+<p>我之前面试过一个候选人，他说他们用 Redis 做分布式锁，问怎么实现的，回答"就 SETNX 加个 EXPIRE"。再问他如果 SETNX 成功但 EXPIRE 没执行怎么办？愣了一下。</p>
+<p>这其实是最经典的面试题之一。分布式锁看着简单，坑一个比一个深。从最原始的 <code>SETNX</code> 到 Redis 官方推荐的 Redlock，这中间经历了 4 个阶段的演进。</p>
+<p>今天我把这 4 种方案掰开揉碎了讲，每种方案的原理、代码、坑点、面试怎么答，一次性说清楚。</p>
+<h2>为什么不用 JVM 锁？</h2>
+<p>先解决一个基础问题：为什么不用 <code>synchronized</code> 或 <code>ReentrantLock</code>？</p>
+<p>JVM 锁只在单进程内生效。你的应用部署了 3 个实例，用户 A 的请求打到实例 1，用户 B 的请求打到实例 2，两个实例同时执行一段需要互斥的代码——JVM 锁管不了跨进程的资源竞争。</p>
+<p>具体的场景：秒杀扣库存、定时任务防止重复执行、分布式事务中的资源锁定。这些场景必须用分布式锁，锁的是<strong>所有实例之间共享的资源</strong>。</p>
+<p>好，进入正题。</p>
+<h2>方案一：SETNX + EXPIRE（坑最多的方案）</h2>
+<p>这是最原始、也是最容易出事故的方案。</p>
+<h3>现象</h3>
+<p>你肯定也遇到过这种情况：线上突然出现大量重复的定时任务执行。明明加了锁，怎么还是重复了？</p>
+<p>查日志发现：实例 A 执行 <code>SETNX lock_key "value"</code> 成功，拿到了锁。但是还没来得及执行 <code>EXPIRE lock_key 30</code>，进程挂了。锁永远不释放，其他实例永远拿不到锁。</p>
+<h3>原因</h3>
+<p><code>SETNX</code> 和 <code>EXPIRE</code> 是两条独立的命令，不具备原子性。</p>
+<pre style="margin:2px 0" ><code class="language-redis">&gt; SETNX lock_key &quot;instance_1&quot;   # 成功返回 1
+(integer) 1
+&gt; EXPIRE lock_key 30            # 命令还没执行，进程挂了
+</code></pre>
+<p>Redis 不会把两条命令作为一个事务处理。SETNX 成功但 EXPIRE 失败的场景下，这把锁就变成了一把<strong>永不过期的死锁</strong>。</p>
+<h3>解决方案（有条件的改进）</h3>
+<p>如果你非要用这种方案，至少把两条命令合并成一条原子命令，用 <code>SET</code> 加上 NX 和 EX 参数：</p>
+<pre style="margin:2px 0" ><code class="language-redis">&gt; SET lock_key &quot;instance_1&quot; NX EX 30
+OK
+</code></pre>
+<p>这个命令等价于 SETNX + EXPIRE 的原子版本。要么同时成功，要么同时失败，不会出现锁不释放的问题。</p>
+<p>但你以为这就够了？还有一个大坑<strong>——谁解锁</strong>的问题。</p>
+<h3>解错锁的灾难</h3>
+<p>我第一次用的时候也犯过这个错：解锁代码直接 <code>DEL lock_key</code>。</p>
+<pre style="margin:2px 0" ><code class="language-java">// 错误示例：可能解掉别人的锁
+if (jedis.get(&quot;lock_key&quot;).equals(myValue)) {
+    jedis.del(&quot;lock_key&quot;);  // 不是原子的！
+}
+</code></pre>
+<p>为什么有问题？进程 A 拿到锁，锁的 TTL 是 30 秒。进程 A 业务执行了 35 秒（超过锁过期时间），锁自动释放了。进程 B 拿到锁。此时进程 A 终于执行完了，执行 <code>DEL</code>——把进程 B 的锁给解了。</p>
+<p>这就是经典的<strong>锁超时导致误删</strong>问题。</p>
+<p>正确的做法是用 Lua 脚本保证"查值 + 判断 + 删除"的原子性：</p>
+<pre style="margin:2px 0" ><code class="language-lua">-- unlock.lua：原子解锁脚本
+if redis.call(&quot;get&quot;, KEYS[1]) == ARGV[1] then
+    return redis.call(&quot;del&quot;, KEYS[1])
+else
+    return 0
+end
+</code></pre>
+<pre style="margin:2px 0" ><code class="language-java">// Java 调用 Lua 脚本解锁
+String luaScript = &quot;if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end&quot;;
+jedis.eval(luaScript, 
+    Collections.singletonList(&quot;lock_key&quot;), 
+    Collections.singletonList(requestId));
+</code></pre>
+<p>这个方案能解决单机场景下的大部分问题，但它仍然有一个硬伤<strong>：Redis 主从切换时锁会丢失</strong>。主节点挂了，从节点还没同步锁信息，新的客户端就能轻松拿到锁。</p>
+<p>我之前踩过这个坑。线上 Redis 主从切换，三秒之内两台实例同时写数据库，数据直接乱掉。修复花了一整晚。</p>
+<h2>方案二：SET NX EX + Lua 原子解锁（单实例方案）</h2>
+<p>这个方案其实是方案一的正确版本，很多小团队用这个就够了。</p>
+<p>核心就是两点：</p>
+<ol>
+<li><strong>加锁</strong>：<code>SET key value NX EX ttl</code>（原子操作）</li>
+<li><strong>解锁</strong>：Lua 脚本保证"查值→比对→删除"的原子性</li>
+</ol>
+<p>加锁的 Java 代码长这样：</p>
+<pre style="margin:2px 0" ><code class="language-java">public boolean tryLock(Jedis jedis, String lockKey, String requestId, int expireSeconds) {
+    // SET key value NX EX seconds 是原子操作
+    String result = jedis.set(lockKey, requestId, 
+        SetParams.setParams().nx().ex(expireSeconds));
+    return &quot;OK&quot;.equals(result);
+}
+
+public boolean unlock(Jedis jedis, String lockKey, String requestId) {
+    String luaScript = 
+        &quot;if redis.call('get', KEYS[1]) == ARGV[1] then &quot; +
+        &quot;  return redis.call('del', KEYS[1]) &quot; +
+        &quot;else &quot; +
+        &quot;  return 0 &quot; +
+        &quot;end&quot;;
+    Object result = jedis.eval(luaScript, 
+        Collections.singletonList(lockKey), 
+        Collections.singletonList(requestId));
+    return Long.valueOf(1).equals(result);
+}
+</code></pre>
+<p><code>requestId</code> 用 UUID 或者 <code>IP:线程ID:时间戳</code> 的拼接，保证每个客户端持有的 value 是唯一的。解锁的时候只有 value 匹配才允许删除。</p>
+<h3>这个方案够吗？</h3>
+<p>分情况。</p>
+<p>如果你的 Redis 是单节点部署（或者使用了 Redis 哨兵模式但可以接受秒级的锁丢失），这个方案够用。据我观察，国内很多日活百万级别的电商项目，用的就是这个方案。</p>
+<p>但如果你需要强一致性的分布式锁——比如金融交易、账务系统——单实例方案不够。主从切换的那几百毫秒里，锁可能丢失。</p>
+<p>我之前有一篇 Redis 系列一讲过五种数据类型的高级用法，那是基础。到了分布式锁这里，你得根据业务对一致性的要求选方案。</p>
+<h2>方案三：Redisson（生产环境最推荐）</h2>
+<p>我之前踩过那个主从切换的坑之后，就把分布式锁全换成了 Redisson。</p>
+<p>Redisson 是 Redis 官方推荐的 Java 客户端，内置了分布式锁的全部实现。不需要你手写 Lua 脚本，API 和 JUC 的 <code>ReentrantLock</code> 几乎一样。</p>
+<h3>代码示例</h3>
+<pre style="margin:2px 0" ><code class="language-java">// Maven 依赖
+// &lt;dependency&gt;
+//     &lt;groupId&gt;org.redisson&lt;/groupId&gt;
+//     &lt;artifactId&gt;redisson&lt;/artifactId&gt;
+//     &lt;version&gt;3.27.1&lt;/version&gt;
+// &lt;/dependency&gt;
+
+Config config = new Config();
+config.useSingleServer().setAddress(&quot;redis://127.0.0.1:6379&quot;);
+RedissonClient redisson = Redisson.create(config);
+
+RLock lock = redisson.getLock(&quot;myLock&quot;);
+
+try {
+    // 尝试加锁，最多等 10 秒，锁 30 秒后自动释放
+    if (lock.tryLock(10, 30, TimeUnit.SECONDS)) {
+        // 业务逻辑
+        Thread.sleep(5000);
+    }
+} catch (InterruptedException e) {
+    Thread.currentThread().interrupt();
+} finally {
+    // 释放锁
+    lock.unlock();
+}
+</code></pre>
+<h3>Redisson 的三大核心能力</h3>
+<p><strong>1. WatchDog 自动续期</strong></p>
+<p>这是 Redisson 最有价值的功能。默认锁的 TTL 是 30 秒，业务没执行完怎么办？Redisson 会启动一个后台线程（WatchDog），每隔 10 秒检查一次锁是否还在持有。如果还在，就把 TTL 重新设为 30 秒。</p>
+<p>我第一次用的时候特意测过这个机制：业务线程 sleep 60 秒，WatchDog 在第 10 秒、第 20 秒、第 30 秒分别续期，锁一直没释放。业务执行完后调用 <code>unlock()</code>，锁才真正释放。</p>
+<p><strong>2. 可重入锁</strong></p>
+<p>同一个线程可以多次获取同一把锁，内部用计数器 + 哈希结构实现。和 Java 的 <code>ReentrantLock</code> 语义一致。</p>
+<p><strong>3. 自动 Lua 脚本托管</strong></p>
+<p>加锁、续期、解锁全部封装在 Lua 脚本里，你只需要调 API。避免了手写 Lua 出 bug 的风险。</p>
+<h3>Redisson 的缺点</h3>
+<p>Redisson 的方案和方案二本质一样——依赖单台 Redis 节点。主从切换时，如果从节点还没复制到锁信息，锁仍然会丢失。</p>
+<p>只是 Redisson 靠 WatchDog 减少了"业务超时导致锁提前释放"的概率，但没有解决"主从切换导致锁丢失"的问题。</p>
+<p>如果你的业务对一致性要求极高，需要方案四。</p>
+<h2>方案四：Redlock（Redis 官方分布式锁算法）</h2>
+<p>Redlock 是 Redis 作者 antirez 在 2015 年提出的分布式锁算法。核心思想<strong>：多数同意</strong>。</p>
+<h3>原理</h3>
+<p>不是在同一个 Redis 上加锁，而是在 N（通常 5）个独立的 Redis 节点上都加锁。只要超过半数（N/2 + 1）的节点加锁成功，就认为拿到了锁。</p>
+<h3>完整流程</h3>
+<pre style="margin:2px 0" ><code>客户端获取当前时间 T1
+依次向 5 个 Redis 节点发送 SET NX EX 命令
+统计加锁成功的节点数（≥3 就算成功）
+如果成功，计算总耗时 = 当前时间 - T1
+检查总耗时是否小于锁的 TTL
+如果小于，锁有效；如果大于，解锁所有节点（锁已经过期了）
+</code></pre>
+<pre style="margin:2px 0" ><code class="language-java">// Redisson 使用 Redlock
+Config config1 = new Config();
+config1.useSingleServer().setAddress(&quot;redis://node1:6379&quot;);
+Config config2 = new Config();
+config2.useSingleServer().setAddress(&quot;redis://node2:6379&quot;);
+Config config3 = new Config();
+config3.useSingleServer().setAddress(&quot;redis://node3:6379&quot;);
+Config config4 = new Config();
+config4.useSingleServer().setAddress(&quot;redis://node4:6379&quot;);
+Config config5 = new Config();
+config5.useSingleServer().setAddress(&quot;redis://node5:6379&quot;);
+
+RedissonClient redisson1 = Redisson.create(config1);
+// ... 创建其他客户端
+
+RedissonRedLock redLock = new RedissonRedLock(
+    redisson1.getLock(&quot;lockKey&quot;),
+    redisson2.getLock(&quot;lockKey&quot;),
+    redisson3.getLock(&quot;lockKey&quot;),
+    redisson4.getLock(&quot;lockKey&quot;),
+    redisson5.getLock(&quot;lockKey&quot;)
+);
+
+try {
+    if (redLock.tryLock(10, 30, TimeUnit.SECONDS)) {
+        // 5 个节点中至少 3 个加锁成功
+        // 执行业务...
+    }
+} finally {
+    redLock.unlock();
+}
+</code></pre>
+<h3>争议</h3>
+<p>Redlock 其实不是没有争议的。2016 年分布式系统专家 Martin Kleppmann 发表过一篇文章批判 Redlock，指出它依赖了"时钟假设"——假设所有 Redis 节点的时钟是同步的。如果某个节点时钟发生跳跃，Redlock 的安全性就被破坏了。</p>
+<p>antirez 也写了文章回应，争论的核心在于"分布式锁到底需要多强的一致性"。</p>
+<p>我的建议：如果你的系统已经很复杂了（比如用了 ZK 做协调），直接用 ZooKeeper 的临时顺序节点做分布式锁。ZK 的强一致性模型天然适合这种场景。但如果你本身就在用 Redis，不想额外引入 ZK，Redlock 是你能找到的最好的 Redis 方案。</p>
+<h2>四种方案对比</h2>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>原子性</th>
+<th>容错性</th>
+<th>性能</th>
+<th>推荐场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SETNX+EXPIRE</td>
+<td>❌ 无</td>
+<td>❌ 无</td>
+<td>高</td>
+<td>别用</td>
+</tr>
+<tr>
+<td>SET NX + Lua</td>
+<td>✅ 有</td>
+<td>❌ 主从丢锁</td>
+<td>高</td>
+<td>中小项目，非关键路径</td>
+</tr>
+<tr>
+<td>Redisson</td>
+<td>✅ 有 + 自动续期</td>
+<td>❌ 主从丢锁</td>
+<td>高</td>
+<td>绝大多数生产环境</td>
+</tr>
+<tr>
+<td>Redlock</td>
+<td>✅ 有</td>
+<td>✅ 容忍多数节点挂</td>
+<td>中（5 次网络）</td>
+<td>金融、账务、高一致性场景</td>
+</tr>
+</tbody>
+</table>
+<h2>面试常见追问</h2>
+<p>面试官问到这里，一般还会追三个问题：</p>
+<p><strong>Q1：锁的 TTL 设多少合适</strong>？</p>
+<p>没有标准答案。得根据业务执行时间来评估。定时任务一般设 30~60 秒。我习惯初始值设 30 秒，配合 Redisson 的 WatchDog 自动续期。如果业务平均执行 5 秒，续期任务基本不会触发，也不影响性能。</p>
+<p><strong>Q2：锁冲突的时候怎么处理</strong>？</p>
+<p>不要自旋死等。建议用"快速失败 → 异步重试 → 人工兜底"的策略。秒杀场景下 90% 的请求在 5ms 内能拿到锁，拿不到的走降级流程，不要阻塞在 <code>while(true)</code> 循环里。</p>
+<p><strong>Q3：Redis 分布式锁和 ZooKeeper 锁对比</strong>？</p>
+<p>ZK 更重但一致性更好。Redis 锁追求<strong>高可用</strong>，ZK 锁追求<strong>强一致</strong>。Redis 加锁一次大约 1ms，ZK 因为 ZAB 协议需要 10ms~50ms。追求性能选 Redis，追求一致性选 ZK。</p>
+<hr />
+<p>📌 本文是「面向面试之 Redis」系列第 2 篇<br />
+• 上一篇：<a href="/posts/redis-data-types-advanced-usage/">Redis 系列一：五种存储类型的高级用法</a><br />
+• 下一篇：<a href="/posts/redis-cache-penetration-avalanche/">Redis 系列三：缓存穿透/击穿/雪崩</a>（待发布）</p>

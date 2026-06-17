@@ -115,6 +115,19 @@
       },
       "published_at": "2026-06-15T15:13:03.636367+08:00",
       "updated_at": "2026-06-15T15:13:03.636635+08:00"
+    },
+    {
+      "slug": "redis-6-内存淘汰-lru",
+      "title": "redis-6-内存淘汰-lru",
+      "source_url": "",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/redis-6-内存淘汰-lru.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-18T07:48:22.433475+08:00",
+      "updated_at": "2026-06-18T07:48:22.433910+08:00"
     }
   ],
   "synced_at": "2026-06-15T13:27:03.678322+08:00"

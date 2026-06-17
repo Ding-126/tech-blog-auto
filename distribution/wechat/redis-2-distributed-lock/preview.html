@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>redis-distributed-lock-4-solutions - 微信排版预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+}
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.toolbar-info {
+    font-size: 13px;
+    color: #666;
+}
+.toolbar-info span {
+    margin-right: 12px;
+}
+.toolbar-info .theme-name {
+    background: #f5f5f5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+}
+.copy-btn {
+    padding: 10px 24px;
+    background: #07c160;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.copy-btn:hover { background: #06ae56; transform: translateY(-1px); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied {
+    background: #34c759;
+}
+.phone-frame {
+    max-width: 415px;
+    margin: 76px auto 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.phone-header {
+    background: #ededed;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 1px solid #e0e0e0;
+}
+.article-content {
+    padding: 20px;
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 隐藏的纯微信 HTML，用于复制 */
+#wechatHtml {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 375px;          /* 限宽，避免子 section 撑到视口右边漏出色块 */
+    overflow: hidden;
+    visibility: hidden;    /* 复制时 JS 会临时恢复 visibility */
+    pointer-events: none;
+}
+/* ── Font Size Selector ── */
+.font-size-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px auto;
+    padding: 8px 0;
+    max-width: 415px;
+}
+.fs-label {
+    font-size: 13px;
+    color: #999;
+}
+.fs-btn {
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.fs-btn:hover {
+    border-color: #07C160;
+    color: #07C160;
+}
+.fs-btn.active {
+    background: #07C160;
+    border-color: #07C160;
+    color: #fff;
+}
+@media (max-width: 480px) {
+    .phone-frame {
+        margin: 60px 0 20px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toolbar {
+        padding: 8px 12px;
+    }
+    .copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+<div class="toolbar-left">
+<div class="toolbar-info">
+<span class="theme-name">报纸</span>
+<span>2,649 字</span>
+</div>
+</div>
+<button class="copy-btn" onclick="copyToWechat()">复制到微信</button>
+</div>
+<div class="font-size-selector">
+<span class="fs-label">字号</span>
+<button class="fs-btn active" data-size="15" onclick="switchFontSize(15)">15px</button>
+<button class="fs-btn" data-size="16" onclick="switchFontSize(16)">16px</button>
+</div>
+<div class="phone-frame">
+<div class="phone-header">微信公众号预览</div>
+<div class="article-content" id="articleContent">
+<section data-darkmode-bgcolor="#1a1712" style="background-color:#ffffff;padding:16px"><h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">开头</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">聊分布式锁之前，先问一句：你项目里的分布式锁真的安全吗？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前面试过一个候选人，他说他们用 Redis 做分布式锁，问怎么实现的，回答"就 SETNX 加个 EXPIRE"。再问他如果 SETNX 成功但 EXPIRE 没执行怎么办？愣了一下。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这其实是最经典的面试题之一。分布式锁看着简单，坑一个比一个深。从最原始的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SETNX</code> 到 Redis 官方推荐的 Redlock，这中间经历了 4 个阶段的演进。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">今天我把这 4 种方案掰开揉碎了讲，每种方案的原理、代码、坑点、面试怎么答，一次性说清楚。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">为什么不用 JVM 锁？</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">先解决一个基础问题：为什么不用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">synchronized</code> 或 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ReentrantLock</code>？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">JVM 锁只在单进程内生效。你的应用部署了 3 个实例，用户 A 的请求打到实例 1，用户 B 的请求打到实例 2，两个实例同时执行一段需要互斥的代码——JVM 锁管不了跨进程的资源竞争。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">具体的场景：秒杀扣库存、定时任务防止重复执行、分布式事务中的资源锁定。这些场景必须用分布式锁，锁的是<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">所有实例之间共享的资源</strong>。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">好，进入正题。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案一：SETNX + EXPIRE（坑最多的方案）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这是最原始、也是最容易出事故的方案。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">现象</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">你肯定也遇到过这种情况：线上突然出现大量重复的定时任务执行。明明加了锁，怎么还是重复了？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">查日志发现：实例 A 执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SETNX lock_key "value"</code> 成功，拿到了锁。但是还没来得及执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">EXPIRE lock_key 30</code>，进程挂了。锁永远不释放，其他实例永远拿不到锁。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">原因</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SETNX</code> 和 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">EXPIRE</code> 是两条独立的命令，不具备原子性。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">&gt; SETNX lock_key <span style="color:#ce9178">"instance_1"</span>   # 成功返回 <span style="color:#b5cea8">1</span><br/>(integer) <span style="color:#b5cea8">1</span><br/>&gt; EXPIRE lock_key <span style="color:#b5cea8">30</span>            # 命令还没执行，进程挂了<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 不会把两条命令作为一个事务处理。SETNX 成功但 EXPIRE 失败的场景下，这把锁就变成了一把<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">永不过期的死锁</strong>。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">解决方案（有条件的改进）</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果你非要用这种方案，至少把两条命令合并成一条原子命令，用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SET</code> 加上 NX 和 EX 参数：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">&gt; SET lock_key <span style="color:#ce9178">"instance_1"</span> NX EX <span style="color:#b5cea8">30</span><br/>OK<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这个命令等价于 SETNX + EXPIRE 的原子版本。要么同时成功，要么同时失败，不会出现锁不释放的问题。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">但你以为这就够了？还有一个大坑——<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">谁解锁</strong>的问题。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">解错锁的灾难</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我第一次用的时候也犯过这个错：解锁代码直接 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">DEL lock_key</code>。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 错误示例：可能解掉别人的锁</span><br/><span style="color:#569cd6">if</span> (jedis.get(<span style="color:#ce9178">"lock_key"</span>).equals(myValue)) {<br/>    jedis.<span style="color:#569cd6">del</span>(<span style="color:#ce9178">"lock_key"</span>);  <span style="color:#6a9955">// 不是原子的！</span><br/>}<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">为什么有问题？进程 A 拿到锁，锁的 TTL 是 30 秒。进程 A 业务执行了 35 秒（超过锁过期时间），锁自动释放了。进程 B 拿到锁。此时进程 A 终于执行完了，执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">DEL</code>——把进程 B 的锁给解了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这就是经典的<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">锁超时导致误删</strong>问题。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">正确的做法是用 Lua 脚本保证"查值 + 判断 + 删除"的原子性：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">-- unlock.lua：原子解锁脚本<br/><span style="color:#569cd6">if</span> redis.call(<span style="color:#ce9178">"get"</span>, KEYS[<span style="color:#b5cea8">1</span>]) == ARGV[<span style="color:#b5cea8">1</span>] then<br/>    <span style="color:#569cd6">return</span> redis.call(<span style="color:#ce9178">"<span style="color:#569cd6">del</span>"</span>, KEYS[<span style="color:#b5cea8">1</span>])<br/><span style="color:#569cd6">else</span><br/>    <span style="color:#569cd6">return</span> <span style="color:#b5cea8">0</span><br/>end<br/></code></pre></section>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Java 调用 Lua 脚本解锁</span><br/><span style="color:#4ec9b0">String</span> luaScript = <span style="color:#ce9178">"<span style="color:#569cd6">if</span> redis.call('get', KEYS[<span style="color:#b5cea8">1</span>]) == ARGV[<span style="color:#b5cea8">1</span>] then <span style="color:#569cd6">return</span> redis.call('<span style="color:#569cd6">del</span>', KEYS[<span style="color:#b5cea8">1</span>]) <span style="color:#569cd6">else</span> <span style="color:#569cd6">return</span> <span style="color:#b5cea8">0</span> end"</span>;<br/>jedis.eval(luaScript, <br/>    Collections.singletonList(<span style="color:#ce9178">"lock_key"</span>), <br/>    Collections.singletonList(requestId));<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这个方案能解决单机场景下的大部分问题，但它仍然有一个硬伤：<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Redis 主从切换时锁会丢失</strong>。主节点挂了，从节点还没同步锁信息，新的客户端就能轻松拿到锁。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前踩过这个坑。线上 Redis 主从切换，三秒之内两台实例同时写数据库，数据直接乱掉。修复花了一整晚。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案二：SET NX EX + Lua 原子解锁（单实例方案）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这个方案其实是方案一的正确版本，很多小团队用这个就够了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">核心就是两点：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">1</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">加锁</strong>：<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SET key value NX EX ttl</code>（原子操作）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">2</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">解锁</strong>：Lua 脚本保证"查值→比对→删除"的原子性</span></section></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">加锁的 Java 代码长这样：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">public boolean tryLock(Jedis jedis, <span style="color:#4ec9b0">String</span> lockKey, <span style="color:#4ec9b0">String</span> requestId, <span style="color:#4ec9b0">int</span> expireSeconds) {<br/>    <span style="color:#6a9955">// SET key value NX EX seconds 是原子操作</span><br/>    <span style="color:#4ec9b0">String</span> result = jedis.<span style="color:#4ec9b0">set</span>(lockKey, requestId, <br/>        SetParams.setParams().nx().ex(expireSeconds));<br/>    <span style="color:#569cd6">return</span> <span style="color:#ce9178">"OK"</span>.equals(result);<br/>}<br/><br/>public boolean unlock(Jedis jedis, <span style="color:#4ec9b0">String</span> lockKey, <span style="color:#4ec9b0">String</span> requestId) {<br/>    <span style="color:#4ec9b0">String</span> luaScript = <br/>        <span style="color:#ce9178">"<span style="color:#569cd6">if</span> redis.call('get', KEYS[<span style="color:#b5cea8">1</span>]) == ARGV[<span style="color:#b5cea8">1</span>] then "</span> +<br/>        <span style="color:#ce9178">"  <span style="color:#569cd6">return</span> redis.call('<span style="color:#569cd6">del</span>', KEYS[<span style="color:#b5cea8">1</span>]) "</span> +<br/>        <span style="color:#ce9178">"<span style="color:#569cd6">else</span> "</span> +<br/>        <span style="color:#ce9178">"  <span style="color:#569cd6">return</span> <span style="color:#b5cea8">0</span> "</span> +<br/>        <span style="color:#ce9178">"end"</span>;<br/>    <span style="color:#4ec9b0">Object</span> result = jedis.eval(luaScript, <br/>        Collections.singletonList(lockKey), <br/>        Collections.singletonList(requestId));<br/>    <span style="color:#569cd6">return</span> Long.valueOf(<span style="color:#b5cea8">1</span>).equals(result);<br/>}<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">requestId</code> 用 UUID 或者 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">IP:线程ID:时间戳</code> 的拼接，保证每个客户端持有的 value 是唯一的。解锁的时候只有 value 匹配才允许删除。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">这个方案够吗？</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">分情况。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果你的 Redis 是单节点部署（或者使用了 Redis 哨兵模式但可以接受秒级的锁丢失），这个方案够用。据我观察，国内很多日活百万级别的电商项目，用的就是这个方案。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">但如果你需要强一致性的分布式锁——比如金融交易、账务系统——单实例方案不够。主从切换的那几百毫秒里，锁可能丢失。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前有一篇 Redis 系列一讲过五种数据类型的高级用法，那是基础。到了分布式锁这里，你得根据业务对一致性的要求选方案。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案三：Redisson（生产环境最推荐）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前踩过那个主从切换的坑之后，就把分布式锁全换成了 Redisson。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redisson 是 Redis 官方推荐的 Java 客户端，内置了分布式锁的全部实现。不需要你手写 Lua 脚本，API 和 JUC 的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ReentrantLock</code> 几乎一样。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">代码示例</h3>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Maven 依赖</span><br/><span style="color:#6a9955">// &lt;dependency&gt;</span><br/><span style="color:#6a9955">//     &lt;groupId&gt;org.redisson&lt;/groupId&gt;</span><br/><span style="color:#6a9955">//     &lt;artifactId&gt;redisson&lt;/artifactId&gt;</span><br/><span style="color:#6a9955">//     &lt;version&gt;<span style="color:#b5cea8">3.27</span>.<span style="color:#b5cea8">1</span>&lt;/version&gt;</span><br/><span style="color:#6a9955">// &lt;/dependency&gt;</span><br/><br/>Config config = <span style="color:#569cd6">new</span> Config();<br/>config.useSingleServer().setAddress(<span style="color:#ce9178">"redis://<span style="color:#b5cea8">127.0</span>.<span style="color:#b5cea8">0.1</span>:<span style="color:#b5cea8">6379</span>"</span>);<br/>RedissonClient redisson = Redisson.create(config);<br/><br/>RLock lock = redisson.getLock(<span style="color:#ce9178">"myLock"</span>);<br/><br/><span style="color:#569cd6">try</span> {<br/>    <span style="color:#6a9955">// 尝试加锁，最多等 <span style="color:#b5cea8">10</span> 秒，锁 <span style="color:#b5cea8">30</span> 秒后自动释放</span><br/>    <span style="color:#569cd6">if</span> (lock.tryLock(<span style="color:#b5cea8">10</span>, <span style="color:#b5cea8">30</span>, TimeUnit.SECONDS)) {<br/>        <span style="color:#6a9955">// 业务逻辑</span><br/>        Thread.sleep(<span style="color:#b5cea8">5000</span>);<br/>    }<br/>} <span style="color:#569cd6">catch</span> (InterruptedException e) {<br/>    Thread.currentThread().interrupt();<br/>} <span style="color:#569cd6">finally</span> {<br/>    <span style="color:#6a9955">// 释放锁</span><br/>    lock.unlock();<br/>}<br/></code></pre></section>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">Redisson 的三大核心能力</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">1. WatchDog 自动续期</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这是 Redisson 最有价值的功能。默认锁的 TTL 是 30 秒，业务没执行完怎么办？Redisson 会启动一个后台线程（WatchDog），每隔 10 秒检查一次锁是否还在持有。如果还在，就把 TTL 重新设为 30 秒。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我第一次用的时候特意测过这个机制：业务线程 sleep 60 秒，WatchDog 在第 10 秒、第 20 秒、第 30 秒分别续期，锁一直没释放。业务执行完后调用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">unlock()</code>，锁才真正释放。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">2. 可重入锁</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">同一个线程可以多次获取同一把锁，内部用计数器 + 哈希结构实现。和 Java 的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ReentrantLock</code> 语义一致。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">3. 自动 Lua 脚本托管</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">加锁、续期、解锁全部封装在 Lua 脚本里，你只需要调 API。避免了手写 Lua 出 bug 的风险。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">Redisson 的缺点</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redisson 的方案和方案二本质一样——依赖单台 Redis 节点。主从切换时，如果从节点还没复制到锁信息，锁仍然会丢失。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">只是 Redisson 靠 WatchDog 减少了"业务超时导致锁提前释放"的概率，但没有解决"主从切换导致锁丢失"的问题。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果你的业务对一致性要求极高，需要方案四。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案四：Redlock（Redis 官方分布式锁算法）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redlock 是 Redis 作者 antirez 在 2015 年提出的分布式锁算法。核心思想：<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">多数同意</strong>。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">原理</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">不是在同一个 Redis 上加锁，而是在 N（通常 5）个独立的 Redis 节点上都加锁。只要超过半数（N/2 + 1）的节点加锁成功，就认为拿到了锁。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">完整流程</h3>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">客户端获取当前时间 T1<br/>依次向 5 个 Redis 节点发送 SET NX EX 命令<br/>统计加锁成功的节点数（≥3 就算成功）<br/>如果成功，计算总耗时 = 当前时间 - T1<br/>检查总耗时是否小于锁的 TTL<br/>如果小于，锁有效；如果大于，解锁所有节点（锁已经过期了）<br/></code></pre></section>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Redisson 使用 Redlock</span><br/>Config config1 = <span style="color:#569cd6">new</span> Config();<br/>config1.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node1:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config2 = <span style="color:#569cd6">new</span> Config();<br/>config2.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node2:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config3 = <span style="color:#569cd6">new</span> Config();<br/>config3.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node3:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config4 = <span style="color:#569cd6">new</span> Config();<br/>config4.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node4:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config5 = <span style="color:#569cd6">new</span> Config();<br/>config5.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node5:<span style="color:#b5cea8">6379</span>"</span>);<br/><br/>RedissonClient redisson1 = Redisson.create(config1);<br/><span style="color:#6a9955">// ... 创建其他客户端</span><br/><br/>RedissonRedLock redLock = <span style="color:#569cd6">new</span> RedissonRedLock(<br/>    redisson1.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson2.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson3.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson4.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson5.getLock(<span style="color:#ce9178">"lockKey"</span>)<br/>);<br/><br/><span style="color:#569cd6">try</span> {<br/>    <span style="color:#569cd6">if</span> (redLock.tryLock(<span style="color:#b5cea8">10</span>, <span style="color:#b5cea8">30</span>, TimeUnit.SECONDS)) {<br/>        <span style="color:#6a9955">// <span style="color:#b5cea8">5</span> 个节点中至少 <span style="color:#b5cea8">3</span> 个加锁成功</span><br/>        <span style="color:#6a9955">// 执行业务...</span><br/>    }<br/>} <span style="color:#569cd6">finally</span> {<br/>    redLock.unlock();<br/>}<br/></code></pre></section>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">争议</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redlock 其实不是没有争议的。2016 年分布式系统专家 Martin Kleppmann 发表过一篇文章批判 Redlock，指出它依赖了"时钟假设"——假设所有 Redis 节点的时钟是同步的。如果某个节点时钟发生跳跃，Redlock 的安全性就被破坏了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">antirez 也写了文章回应，争论的核心在于"分布式锁到底需要多强的一致性"。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我的建议：如果你的系统已经很复杂了（比如用了 ZK 做协调），直接用 ZooKeeper 的临时顺序节点做分布式锁。ZK 的强一致性模型天然适合这种场景。但如果你本身就在用 Redis，不想额外引入 ZK，Redlock 是你能找到的最好的 Redis 方案。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">四种方案对比</h2>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">方案</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">原子性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">容错性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">性能</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">推荐场景</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">SETNX+EXPIRE</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 无</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 无</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">别用</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">SET NX + Lua</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 有</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 主从丢锁</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中小项目，非关键路径</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Redisson</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 有 + 自动续期</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 主从丢锁</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">绝大多数生产环境</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Redlock</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 有</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 容忍多数节点挂</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中（5 次网络）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">金融、账务、高一致性场景</td>
+</tr>
+</tbody>
+</table>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">面试常见追问</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试官问到这里，一般还会追三个问题：</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Q1：锁的 TTL 设多少合适？</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">没有标准答案。得根据业务执行时间来评估。定时任务一般设 30~60 秒。我习惯初始值设 30 秒，配合 Redisson 的 WatchDog 自动续期。如果业务平均执行 5 秒，续期任务基本不会触发，也不影响性能。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Q2：锁冲突的时候怎么处理？</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">不要自旋死等。建议用"快速失败 → 异步重试 → 人工兜底"的策略。秒杀场景下 90% 的请求在 5ms 内能拿到锁，拿不到的走降级流程，不要阻塞在 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">while(true)</code> 循环里。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Q3：Redis 分布式锁和 ZooKeeper 锁对比？</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">ZK 更重但一致性更好。Redis 锁追求<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">高可用</strong>，ZK 锁追求<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">强一致</strong>。Redis 加锁一次大约 1ms，ZK 因为 ZAB 协议需要 10ms~50ms。追求性能选 Redis，追求一致性选 ZK。</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px"/>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">📌 本文是「面向面试之 Redis」系列第 2 篇<br/>
+• 上一篇：Redis 系列一：五种存储类型的高级用法<br/>
+• 下一篇：Redis 系列三：缓存穿透/击穿/雪崩（待发布）</p></section>
+</div>
+</div>
+<!-- 隐藏区域：存放纯微信 HTML（不含预览壳样式），复制时用这个 -->
+<div id="wechatHtml">
+<section data-darkmode-bgcolor="#1a1712" style="background-color:#ffffff;padding:16px"><h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">开头</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">聊分布式锁之前，先问一句：你项目里的分布式锁真的安全吗？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前面试过一个候选人，他说他们用 Redis 做分布式锁，问怎么实现的，回答"就 SETNX 加个 EXPIRE"。再问他如果 SETNX 成功但 EXPIRE 没执行怎么办？愣了一下。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这其实是最经典的面试题之一。分布式锁看着简单，坑一个比一个深。从最原始的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SETNX</code> 到 Redis 官方推荐的 Redlock，这中间经历了 4 个阶段的演进。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">今天我把这 4 种方案掰开揉碎了讲，每种方案的原理、代码、坑点、面试怎么答，一次性说清楚。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">为什么不用 JVM 锁？</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">先解决一个基础问题：为什么不用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">synchronized</code> 或 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ReentrantLock</code>？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">JVM 锁只在单进程内生效。你的应用部署了 3 个实例，用户 A 的请求打到实例 1，用户 B 的请求打到实例 2，两个实例同时执行一段需要互斥的代码——JVM 锁管不了跨进程的资源竞争。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">具体的场景：秒杀扣库存、定时任务防止重复执行、分布式事务中的资源锁定。这些场景必须用分布式锁，锁的是<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">所有实例之间共享的资源</strong>。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">好，进入正题。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案一：SETNX + EXPIRE（坑最多的方案）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这是最原始、也是最容易出事故的方案。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">现象</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">你肯定也遇到过这种情况：线上突然出现大量重复的定时任务执行。明明加了锁，怎么还是重复了？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">查日志发现：实例 A 执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SETNX lock_key "value"</code> 成功，拿到了锁。但是还没来得及执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">EXPIRE lock_key 30</code>，进程挂了。锁永远不释放，其他实例永远拿不到锁。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">原因</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SETNX</code> 和 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">EXPIRE</code> 是两条独立的命令，不具备原子性。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">&gt; SETNX lock_key <span style="color:#ce9178">"instance_1"</span>   # 成功返回 <span style="color:#b5cea8">1</span><br/>(integer) <span style="color:#b5cea8">1</span><br/>&gt; EXPIRE lock_key <span style="color:#b5cea8">30</span>            # 命令还没执行，进程挂了<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 不会把两条命令作为一个事务处理。SETNX 成功但 EXPIRE 失败的场景下，这把锁就变成了一把<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">永不过期的死锁</strong>。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">解决方案（有条件的改进）</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果你非要用这种方案，至少把两条命令合并成一条原子命令，用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SET</code> 加上 NX 和 EX 参数：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">&gt; SET lock_key <span style="color:#ce9178">"instance_1"</span> NX EX <span style="color:#b5cea8">30</span><br/>OK<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这个命令等价于 SETNX + EXPIRE 的原子版本。要么同时成功，要么同时失败，不会出现锁不释放的问题。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">但你以为这就够了？还有一个大坑——<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">谁解锁</strong>的问题。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">解错锁的灾难</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我第一次用的时候也犯过这个错：解锁代码直接 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">DEL lock_key</code>。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 错误示例：可能解掉别人的锁</span><br/><span style="color:#569cd6">if</span> (jedis.get(<span style="color:#ce9178">"lock_key"</span>).equals(myValue)) {<br/>    jedis.<span style="color:#569cd6">del</span>(<span style="color:#ce9178">"lock_key"</span>);  <span style="color:#6a9955">// 不是原子的！</span><br/>}<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">为什么有问题？进程 A 拿到锁，锁的 TTL 是 30 秒。进程 A 业务执行了 35 秒（超过锁过期时间），锁自动释放了。进程 B 拿到锁。此时进程 A 终于执行完了，执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">DEL</code>——把进程 B 的锁给解了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这就是经典的<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">锁超时导致误删</strong>问题。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">正确的做法是用 Lua 脚本保证"查值 + 判断 + 删除"的原子性：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">-- unlock.lua：原子解锁脚本<br/><span style="color:#569cd6">if</span> redis.call(<span style="color:#ce9178">"get"</span>, KEYS[<span style="color:#b5cea8">1</span>]) == ARGV[<span style="color:#b5cea8">1</span>] then<br/>    <span style="color:#569cd6">return</span> redis.call(<span style="color:#ce9178">"<span style="color:#569cd6">del</span>"</span>, KEYS[<span style="color:#b5cea8">1</span>])<br/><span style="color:#569cd6">else</span><br/>    <span style="color:#569cd6">return</span> <span style="color:#b5cea8">0</span><br/>end<br/></code></pre></section>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Java 调用 Lua 脚本解锁</span><br/><span style="color:#4ec9b0">String</span> luaScript = <span style="color:#ce9178">"<span style="color:#569cd6">if</span> redis.call('get', KEYS[<span style="color:#b5cea8">1</span>]) == ARGV[<span style="color:#b5cea8">1</span>] then <span style="color:#569cd6">return</span> redis.call('<span style="color:#569cd6">del</span>', KEYS[<span style="color:#b5cea8">1</span>]) <span style="color:#569cd6">else</span> <span style="color:#569cd6">return</span> <span style="color:#b5cea8">0</span> end"</span>;<br/>jedis.eval(luaScript, <br/>    Collections.singletonList(<span style="color:#ce9178">"lock_key"</span>), <br/>    Collections.singletonList(requestId));<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这个方案能解决单机场景下的大部分问题，但它仍然有一个硬伤：<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Redis 主从切换时锁会丢失</strong>。主节点挂了，从节点还没同步锁信息，新的客户端就能轻松拿到锁。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前踩过这个坑。线上 Redis 主从切换，三秒之内两台实例同时写数据库，数据直接乱掉。修复花了一整晚。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案二：SET NX EX + Lua 原子解锁（单实例方案）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这个方案其实是方案一的正确版本，很多小团队用这个就够了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">核心就是两点：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">1</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">加锁</strong>：<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SET key value NX EX ttl</code>（原子操作）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">2</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">解锁</strong>：Lua 脚本保证"查值→比对→删除"的原子性</span></section></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">加锁的 Java 代码长这样：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">public boolean tryLock(Jedis jedis, <span style="color:#4ec9b0">String</span> lockKey, <span style="color:#4ec9b0">String</span> requestId, <span style="color:#4ec9b0">int</span> expireSeconds) {<br/>    <span style="color:#6a9955">// SET key value NX EX seconds 是原子操作</span><br/>    <span style="color:#4ec9b0">String</span> result = jedis.<span style="color:#4ec9b0">set</span>(lockKey, requestId, <br/>        SetParams.setParams().nx().ex(expireSeconds));<br/>    <span style="color:#569cd6">return</span> <span style="color:#ce9178">"OK"</span>.equals(result);<br/>}<br/><br/>public boolean unlock(Jedis jedis, <span style="color:#4ec9b0">String</span> lockKey, <span style="color:#4ec9b0">String</span> requestId) {<br/>    <span style="color:#4ec9b0">String</span> luaScript = <br/>        <span style="color:#ce9178">"<span style="color:#569cd6">if</span> redis.call('get', KEYS[<span style="color:#b5cea8">1</span>]) == ARGV[<span style="color:#b5cea8">1</span>] then "</span> +<br/>        <span style="color:#ce9178">"  <span style="color:#569cd6">return</span> redis.call('<span style="color:#569cd6">del</span>', KEYS[<span style="color:#b5cea8">1</span>]) "</span> +<br/>        <span style="color:#ce9178">"<span style="color:#569cd6">else</span> "</span> +<br/>        <span style="color:#ce9178">"  <span style="color:#569cd6">return</span> <span style="color:#b5cea8">0</span> "</span> +<br/>        <span style="color:#ce9178">"end"</span>;<br/>    <span style="color:#4ec9b0">Object</span> result = jedis.eval(luaScript, <br/>        Collections.singletonList(lockKey), <br/>        Collections.singletonList(requestId));<br/>    <span style="color:#569cd6">return</span> Long.valueOf(<span style="color:#b5cea8">1</span>).equals(result);<br/>}<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">requestId</code> 用 UUID 或者 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">IP:线程ID:时间戳</code> 的拼接，保证每个客户端持有的 value 是唯一的。解锁的时候只有 value 匹配才允许删除。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">这个方案够吗？</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">分情况。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果你的 Redis 是单节点部署（或者使用了 Redis 哨兵模式但可以接受秒级的锁丢失），这个方案够用。据我观察，国内很多日活百万级别的电商项目，用的就是这个方案。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">但如果你需要强一致性的分布式锁——比如金融交易、账务系统——单实例方案不够。主从切换的那几百毫秒里，锁可能丢失。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前有一篇 Redis 系列一讲过五种数据类型的高级用法，那是基础。到了分布式锁这里，你得根据业务对一致性的要求选方案。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案三：Redisson（生产环境最推荐）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我之前踩过那个主从切换的坑之后，就把分布式锁全换成了 Redisson。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redisson 是 Redis 官方推荐的 Java 客户端，内置了分布式锁的全部实现。不需要你手写 Lua 脚本，API 和 JUC 的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ReentrantLock</code> 几乎一样。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">代码示例</h3>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Maven 依赖</span><br/><span style="color:#6a9955">// &lt;dependency&gt;</span><br/><span style="color:#6a9955">//     &lt;groupId&gt;org.redisson&lt;/groupId&gt;</span><br/><span style="color:#6a9955">//     &lt;artifactId&gt;redisson&lt;/artifactId&gt;</span><br/><span style="color:#6a9955">//     &lt;version&gt;<span style="color:#b5cea8">3.27</span>.<span style="color:#b5cea8">1</span>&lt;/version&gt;</span><br/><span style="color:#6a9955">// &lt;/dependency&gt;</span><br/><br/>Config config = <span style="color:#569cd6">new</span> Config();<br/>config.useSingleServer().setAddress(<span style="color:#ce9178">"redis://<span style="color:#b5cea8">127.0</span>.<span style="color:#b5cea8">0.1</span>:<span style="color:#b5cea8">6379</span>"</span>);<br/>RedissonClient redisson = Redisson.create(config);<br/><br/>RLock lock = redisson.getLock(<span style="color:#ce9178">"myLock"</span>);<br/><br/><span style="color:#569cd6">try</span> {<br/>    <span style="color:#6a9955">// 尝试加锁，最多等 <span style="color:#b5cea8">10</span> 秒，锁 <span style="color:#b5cea8">30</span> 秒后自动释放</span><br/>    <span style="color:#569cd6">if</span> (lock.tryLock(<span style="color:#b5cea8">10</span>, <span style="color:#b5cea8">30</span>, TimeUnit.SECONDS)) {<br/>        <span style="color:#6a9955">// 业务逻辑</span><br/>        Thread.sleep(<span style="color:#b5cea8">5000</span>);<br/>    }<br/>} <span style="color:#569cd6">catch</span> (InterruptedException e) {<br/>    Thread.currentThread().interrupt();<br/>} <span style="color:#569cd6">finally</span> {<br/>    <span style="color:#6a9955">// 释放锁</span><br/>    lock.unlock();<br/>}<br/></code></pre></section>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">Redisson 的三大核心能力</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">1. WatchDog 自动续期</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">这是 Redisson 最有价值的功能。默认锁的 TTL 是 30 秒，业务没执行完怎么办？Redisson 会启动一个后台线程（WatchDog），每隔 10 秒检查一次锁是否还在持有。如果还在，就把 TTL 重新设为 30 秒。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我第一次用的时候特意测过这个机制：业务线程 sleep 60 秒，WatchDog 在第 10 秒、第 20 秒、第 30 秒分别续期，锁一直没释放。业务执行完后调用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">unlock()</code>，锁才真正释放。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">2. 可重入锁</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">同一个线程可以多次获取同一把锁，内部用计数器 + 哈希结构实现。和 Java 的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ReentrantLock</code> 语义一致。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">3. 自动 Lua 脚本托管</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">加锁、续期、解锁全部封装在 Lua 脚本里，你只需要调 API。避免了手写 Lua 出 bug 的风险。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">Redisson 的缺点</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redisson 的方案和方案二本质一样——依赖单台 Redis 节点。主从切换时，如果从节点还没复制到锁信息，锁仍然会丢失。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">只是 Redisson 靠 WatchDog 减少了"业务超时导致锁提前释放"的概率，但没有解决"主从切换导致锁丢失"的问题。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果你的业务对一致性要求极高，需要方案四。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">方案四：Redlock（Redis 官方分布式锁算法）</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redlock 是 Redis 作者 antirez 在 2015 年提出的分布式锁算法。核心思想：<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">多数同意</strong>。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">原理</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">不是在同一个 Redis 上加锁，而是在 N（通常 5）个独立的 Redis 节点上都加锁。只要超过半数（N/2 + 1）的节点加锁成功，就认为拿到了锁。</p>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">完整流程</h3>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace">客户端获取当前时间 T1<br/>依次向 5 个 Redis 节点发送 SET NX EX 命令<br/>统计加锁成功的节点数（≥3 就算成功）<br/>如果成功，计算总耗时 = 当前时间 - T1<br/>检查总耗时是否小于锁的 TTL<br/>如果小于，锁有效；如果大于，解锁所有节点（锁已经过期了）<br/></code></pre></section>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Redisson 使用 Redlock</span><br/>Config config1 = <span style="color:#569cd6">new</span> Config();<br/>config1.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node1:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config2 = <span style="color:#569cd6">new</span> Config();<br/>config2.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node2:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config3 = <span style="color:#569cd6">new</span> Config();<br/>config3.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node3:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config4 = <span style="color:#569cd6">new</span> Config();<br/>config4.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node4:<span style="color:#b5cea8">6379</span>"</span>);<br/>Config config5 = <span style="color:#569cd6">new</span> Config();<br/>config5.useSingleServer().setAddress(<span style="color:#ce9178">"redis://node5:<span style="color:#b5cea8">6379</span>"</span>);<br/><br/>RedissonClient redisson1 = Redisson.create(config1);<br/><span style="color:#6a9955">// ... 创建其他客户端</span><br/><br/>RedissonRedLock redLock = <span style="color:#569cd6">new</span> RedissonRedLock(<br/>    redisson1.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson2.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson3.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson4.getLock(<span style="color:#ce9178">"lockKey"</span>),<br/>    redisson5.getLock(<span style="color:#ce9178">"lockKey"</span>)<br/>);<br/><br/><span style="color:#569cd6">try</span> {<br/>    <span style="color:#569cd6">if</span> (redLock.tryLock(<span style="color:#b5cea8">10</span>, <span style="color:#b5cea8">30</span>, TimeUnit.SECONDS)) {<br/>        <span style="color:#6a9955">// <span style="color:#b5cea8">5</span> 个节点中至少 <span style="color:#b5cea8">3</span> 个加锁成功</span><br/>        <span style="color:#6a9955">// 执行业务...</span><br/>    }<br/>} <span style="color:#569cd6">finally</span> {<br/>    redLock.unlock();<br/>}<br/></code></pre></section>
+<h3 data-darkmode-color="#d0d0d0" style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px">争议</h3>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redlock 其实不是没有争议的。2016 年分布式系统专家 Martin Kleppmann 发表过一篇文章批判 Redlock，指出它依赖了"时钟假设"——假设所有 Redis 节点的时钟是同步的。如果某个节点时钟发生跳跃，Redlock 的安全性就被破坏了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">antirez 也写了文章回应，争论的核心在于"分布式锁到底需要多强的一致性"。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我的建议：如果你的系统已经很复杂了（比如用了 ZK 做协调），直接用 ZooKeeper 的临时顺序节点做分布式锁。ZK 的强一致性模型天然适合这种场景。但如果你本身就在用 Redis，不想额外引入 ZK，Redlock 是你能找到的最好的 Redis 方案。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">四种方案对比</h2>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">方案</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">原子性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">容错性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">性能</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">推荐场景</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">SETNX+EXPIRE</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 无</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 无</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">别用</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">SET NX + Lua</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 有</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 主从丢锁</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中小项目，非关键路径</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Redisson</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 有 + 自动续期</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 主从丢锁</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">绝大多数生产环境</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Redlock</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 有</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 容忍多数节点挂</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中（5 次网络）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">金融、账务、高一致性场景</td>
+</tr>
+</tbody>
+</table>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">面试常见追问</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试官问到这里，一般还会追三个问题：</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Q1：锁的 TTL 设多少合适？</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">没有标准答案。得根据业务执行时间来评估。定时任务一般设 30~60 秒。我习惯初始值设 30 秒，配合 Redisson 的 WatchDog 自动续期。如果业务平均执行 5 秒，续期任务基本不会触发，也不影响性能。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Q2：锁冲突的时候怎么处理？</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">不要自旋死等。建议用"快速失败 → 异步重试 → 人工兜底"的策略。秒杀场景下 90% 的请求在 5ms 内能拿到锁，拿不到的走降级流程，不要阻塞在 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">while(true)</code> 循环里。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Q3：Redis 分布式锁和 ZooKeeper 锁对比？</strong></p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">ZK 更重但一致性更好。Redis 锁追求<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">高可用</strong>，ZK 锁追求<strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">强一致</strong>。Redis 加锁一次大约 1ms，ZK 因为 ZAB 协议需要 10ms~50ms。追求性能选 Redis，追求一致性选 ZK。</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px"/>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">📌 本文是「面向面试之 Redis」系列第 2 篇<br/>
+• 上一篇：Redis 系列一：五种存储类型的高级用法<br/>
+• 下一篇：Redis 系列三：缓存穿透/击穿/雪崩（待发布）</p></section>
+</div>
+<script>
+function switchFontSize(size) {
+    // 更新按钮状态
+    document.querySelectorAll('.fs-btn').forEach(function(btn) {
+        if (parseInt(btn.dataset.size) === size) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 修改可见预览区和隐藏复制区的 p 标签
+    ['articleContent', 'wechatHtml'].forEach(function(id) {
+        var container = document.getElementById(id);
+        if (!container) return;
+        container.querySelectorAll('p').forEach(function(p) {
+            var currentSize = parseInt(window.getComputedStyle(p).fontSize);
+            if (currentSize >= 14 && currentSize <= 16) {
+                p.style.fontSize = size + 'px';
+                p.style.lineHeight = size === 16 ? '1.75' : '1.8';
+            }
+        });
+        // 修改列表项文字
+        container.querySelectorAll('[style*="font-size:15px"]').forEach(function(el) {
+            if (el.tagName === 'SPAN' || el.tagName === 'SECTION') {
+                el.style.fontSize = size + 'px';
+            }
+        });
+    });
+
+    // 保存选择到 localStorage
+    localStorage.setItem('wechat-format-fontsize', size);
+}
+
+// 页面加载时恢复上次选择
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('wechat-format-fontsize');
+    if (saved && saved !== '15') {
+        switchFontSize(parseInt(saved));
+    }
+});
+
+function copyToWechat() {
+    const source = document.getElementById('wechatHtml');
+    const range = document.createRange();
+    range.selectNodeContents(source);
+
+    // 临时让元素可见（否则某些浏览器不允许复制隐藏元素）
+    source.style.position = 'fixed';
+    source.style.left = '0';
+    source.style.top = '0';
+    source.style.opacity = '0.01';
+    source.style.width = '375px';
+    source.style.visibility = 'visible';
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '已复制!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '复制到微信';
+            btn.classList.remove('copied');
+        }, 2500);
+    } catch(e) {
+        // fallback: 尝试 Clipboard API
+        const html = source.innerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制到微信';
+                btn.classList.remove('copied');
+            }, 2500);
+        }).catch(() => {
+            alert('复制失败，请手动选中文章内容复制');
+        });
+    }
+
+    // 恢复隐藏
+    source.style.position = 'absolute';
+    source.style.left = '-9999px';
+    source.style.top = '-9999px';
+    source.style.opacity = '';
+    source.style.width = '';
+    source.style.visibility = 'hidden';
+
+    sel.removeAllRanges();
+}
+</script>
+</body>
+</html>

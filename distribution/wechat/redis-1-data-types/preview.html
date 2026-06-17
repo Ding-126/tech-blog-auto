@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>redis-data-types-advanced-usage - 微信排版预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+}
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.toolbar-info {
+    font-size: 13px;
+    color: #666;
+}
+.toolbar-info span {
+    margin-right: 12px;
+}
+.toolbar-info .theme-name {
+    background: #f5f5f5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+}
+.copy-btn {
+    padding: 10px 24px;
+    background: #07c160;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.copy-btn:hover { background: #06ae56; transform: translateY(-1px); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied {
+    background: #34c759;
+}
+.phone-frame {
+    max-width: 415px;
+    margin: 76px auto 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.phone-header {
+    background: #ededed;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 1px solid #e0e0e0;
+}
+.article-content {
+    padding: 20px;
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 隐藏的纯微信 HTML，用于复制 */
+#wechatHtml {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 375px;          /* 限宽，避免子 section 撑到视口右边漏出色块 */
+    overflow: hidden;
+    visibility: hidden;    /* 复制时 JS 会临时恢复 visibility */
+    pointer-events: none;
+}
+/* ── Font Size Selector ── */
+.font-size-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px auto;
+    padding: 8px 0;
+    max-width: 415px;
+}
+.fs-label {
+    font-size: 13px;
+    color: #999;
+}
+.fs-btn {
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.fs-btn:hover {
+    border-color: #07C160;
+    color: #07C160;
+}
+.fs-btn.active {
+    background: #07C160;
+    border-color: #07C160;
+    color: #fff;
+}
+@media (max-width: 480px) {
+    .phone-frame {
+        margin: 60px 0 20px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toolbar {
+        padding: 8px 12px;
+    }
+    .copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+<div class="toolbar-left">
+<div class="toolbar-info">
+<span class="theme-name">报纸</span>
+<span>1,952 字</span>
+</div>
+</div>
+<button class="copy-btn" onclick="copyToWechat()">复制到微信</button>
+</div>
+<div class="font-size-selector">
+<span class="fs-label">字号</span>
+<button class="fs-btn active" data-size="15" onclick="switchFontSize(15)">15px</button>
+<button class="fs-btn" data-size="16" onclick="switchFontSize(16)">16px</button>
+</div>
+<div class="phone-frame">
+<div class="phone-header">微信公众号预览</div>
+<div class="article-content" id="articleContent">
+<section data-darkmode-bgcolor="#1a1712" style="background-color:#ffffff;padding:16px"><h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">开头</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">说实话，用了 5 年 Redis，我见过太多人把 Redis 当 KV 存储用。String 存个 JSON、List 做个消息队列，完事了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">之前面试过不少候选人，问到 Redis 数据类型，基本都是 String 和 List 两个名字。再问 Hash 和 ZSet，一半人支支吾吾。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 的五种数据类型，每种都有独特的使用场景。面试官问你"Redis 数据类型怎么用"，回答"String 存 JSON"就太浅了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">今天这篇，我不讲 API 文档，讲实战。每种类型怎么用最优雅、有什么坑、面试官追问怎么答。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">核心结论先行</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">String 存 JSON 是偷懒，Hash 存对象字段更新效率翻倍</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">ZSet 是排行榜神器，比数据库 ORDER BY 快 100 倍</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">Bitmap 做签到、在线状态，1 亿用户只占 12MB 内存</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">HyperLogLog 做 UV 统计，误差 0.81% 但内存只有 12KB</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">Set 做标签系统和共同好友，O(1) 判断成员存在</span></section></section>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">String：别只会存 JSON</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">很多人用 String 存对象的方式是这样的：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 反例：存整个 <span style="color:#4ec9b0">JSON</span></span><br/><span style="color:#4ec9b0">String</span> userJson = <span style="color:#4ec9b0">JSON</span>.toJSONString(user);<br/>redisTemplate.opsForValue().<span style="color:#4ec9b0">set</span>(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, userJson);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">问题在哪？如果只想改用户名，你得先 get 整个 JSON，改一个字段，再 set 回去。并发高的时候还有覆盖写风险。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">正确的做法——用 Hash：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 正解：Hash 存对象</span><br/>Map&lt;<span style="color:#4ec9b0">String</span>, <span style="color:#4ec9b0">String</span>&gt; userMap = <span style="color:#569cd6">new</span> HashMap&lt;&gt;();<br/>userMap.put(<span style="color:#ce9178">"name"</span>, <span style="color:#ce9178">"张三"</span>);<br/>userMap.put(<span style="color:#ce9178">"age"</span>, <span style="color:#ce9178">"<span style="color:#b5cea8">28</span>"</span>);<br/>userMap.put(<span style="color:#ce9178">"email"</span>, <span style="color:#ce9178">"zhangsan<span style="color:#c586c0">@example</span>.com"</span>);<br/><br/>redisTemplate.opsForHash().putAll(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, userMap);<br/><br/><span style="color:#6a9955">// 只改一个字段，不需要读写整个对象</span><br/>redisTemplate.opsForHash().put(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"name"</span>, <span style="color:#ce9178">"李四"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">String 适合的场景</strong>：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">计数器（阅读量、点赞数）：<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">INCR key</code></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">分布式 Session：存 JWT Token</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">分布式锁（后面系列二会详细讲）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">简单缓存：对，简单场景下存 JSON 也没问题</span></section></section>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">Hash：存对象的最佳选择</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Hash 内部是 field-value 的映射，类似 Java 的 HashMap。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 获取单个字段</span><br/><span style="color:#4ec9b0">String</span> name = (<span style="color:#4ec9b0">String</span>) redisTemplate.opsForHash().get(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"name"</span>);<br/><br/><span style="color:#6a9955">// 批量获取</span><br/>List&lt;<span style="color:#4ec9b0">String</span>&gt; fields = Arrays.asList(<span style="color:#ce9178">"name"</span>, <span style="color:#ce9178">"age"</span>, <span style="color:#ce9178">"email"</span>);<br/>List&lt;<span style="color:#4ec9b0">Object</span>&gt; values = redisTemplate.opsForHash().multiGet(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, fields);<br/><br/><span style="color:#6a9955">// 字段自增（比如用户积分）</span><br/>redisTemplate.opsForHash().increment(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"points"</span>, <span style="color:#b5cea8">10</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试常问：Hash 和 String 存对象有什么区别？</p>
+<table style="width:100%;border-collapse:separate;font-size: 16px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">维度</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">String 存 JSON</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">Hash 存对象</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">修改单字段</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读写整个 JSON</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">直接 HSET，O(1)</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">内存占用</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">有 JSON 冗余</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">编码优化后更省</td>
+</tr>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">并发安全</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">有覆盖风险</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">字段级操作更安全</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">序列化</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">依赖 JSON 库</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">原生支持</td>
+</tr>
+</tbody>
+</table>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 内部对小 Hash 用 ziplist 编码，内存比 String 省 30%-50%。当 Hash 的 field 数量超过 512 或者单个 value 超过 64 字节时，转为 hashtable。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">List：消息队列的双刃剑</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">List 最常被拿来做简单消息队列：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 生产者</span><br/>redisTemplate.opsForList().leftPush(<span style="color:#ce9178">"task:queue"</span>, taskJson);<br/><br/><span style="color:#6a9955">// 消费者</span><br/><span style="color:#4ec9b0">String</span> task = redisTemplate.opsForList().rightPop(<span style="color:#ce9178">"task:queue"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">但 List 做消息队列有几个坑：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">1</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">没有 ACK 机制</strong>：消息 pop 出来就没了，消费者挂了消息就丢</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">2</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">没有重试</strong>：消费失败只能自己实现重新 push</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">3</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">重复消费</strong>：多个消费者可能拿到同一个消息</span></section></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">生产环境用 Redis 做消息队列，建议用 <strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Stream</strong>（Redis 5.0+）。Stream 有 Consumer Group、ACK、消息持久化，是 List 的上位替代。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Stream 发布消息</span><br/>Map&lt;<span style="color:#4ec9b0">String</span>, <span style="color:#4ec9b0">String</span>&gt; msg = <span style="color:#569cd6">new</span> HashMap&lt;&gt;();<br/>msg.put(<span style="color:#ce9178">"userId"</span>, <span style="color:#ce9178">"<span style="color:#b5cea8">1001</span>"</span>);<br/>msg.put(<span style="color:#ce9178">"action"</span>, <span style="color:#ce9178">"pay"</span>);<br/>redisTemplate.opsForStream().add(<span style="color:#ce9178">"order:stream"</span>, msg);<br/><br/><span style="color:#6a9955">// Stream 消费消息（带消费者组）</span><br/>List&lt;MapRecord&lt;<span style="color:#4ec9b0">String</span>, <span style="color:#4ec9b0">Object</span>, <span style="color:#4ec9b0">Object</span>&gt;&gt; records = redisTemplate.opsForStream()<br/>    .read(Consumer.<span style="color:#569cd6">from</span>(<span style="color:#ce9178">"order-group"</span>, <span style="color:#ce9178">"consumer-<span style="color:#b5cea8">1</span>"</span>),<br/>          StreamReadOptions.empty().count(<span style="color:#b5cea8">10</span>),<br/>          StreamOffset.create(<span style="color:#ce9178">"order:stream"</span>, ReadOffset.lastConsumed()));<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果业务对消息丢失不敏感（比如日志收集），List 够用了。金融级场景老老实实用 Kafka 或者 RabbitMQ。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">Set：标签系统与共同好友</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Set 的核心能力是 O(1) 判断成员存在 + 集合运算。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">标签系统</strong>：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 给用户打标签</span><br/>redisTemplate.opsForSet().add(<span style="color:#ce9178">"user:tags:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"VIP"</span>, <span style="color:#ce9178">"活跃用户"</span>, <span style="color:#ce9178">"高消费"</span>);<br/><br/><span style="color:#6a9955">// 判断是否是 VIP</span><br/><span style="color:#4ec9b0">Boolean</span> isVip = redisTemplate.opsForSet().isMember(<span style="color:#ce9178">"user:tags:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"VIP"</span>);<br/><br/><span style="color:#6a9955">// 获取用户所有标签</span><br/>Set&lt;<span style="color:#4ec9b0">Object</span>&gt; tags = redisTemplate.opsForSet().members(<span style="color:#ce9178">"user:tags:<span style="color:#b5cea8">1001</span>"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">共同好友</strong>——Set 的交集运算：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 用户 A 的好友</span><br/>redisTemplate.opsForSet().add(<span style="color:#ce9178">"friends:A"</span>, <span style="color:#ce9178">"B"</span>, <span style="color:#ce9178">"C"</span>, <span style="color:#ce9178">"D"</span>, <span style="color:#ce9178">"E"</span>);<br/><span style="color:#6a9955">// 用户 B 的好友</span><br/>redisTemplate.opsForSet().add(<span style="color:#ce9178">"friends:B"</span>, <span style="color:#ce9178">"C"</span>, <span style="color:#ce9178">"D"</span>, <span style="color:#ce9178">"F"</span>, <span style="color:#ce9178">"G"</span>);<br/><br/><span style="color:#6a9955">// 共同好友 = 交集</span><br/>Set&lt;<span style="color:#4ec9b0">Object</span>&gt; commonFriends = redisTemplate.opsForSet()<br/>    .intersect(<span style="color:#ce9178">"friends:A"</span>, <span style="color:#ce9178">"friends:B"</span>);<br/><span style="color:#6a9955">// 结果：[C, D]</span><br/><br/><span style="color:#6a9955">// 推荐好友 = A 有但 B 没有的（差集）</span><br/>Set&lt;<span style="color:#4ec9b0">Object</span>&gt; recommendForB = redisTemplate.opsForSet()<br/>    .difference(<span style="color:#ce9178">"friends:A"</span>, <span style="color:#ce9178">"friends:B"</span>);<br/><span style="color:#6a9955">// 结果：[E]</span><br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试追问：Set 底层怎么实现的？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">小 Set 用 intset（整数数组，有序存储），大 Set 用 hashtable。当 Set 中所有元素都是整数且数量不超过 512 时用 intset，否则转 hashtable。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">ZSet：排行榜的终极方案</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">ZSet（Sorted Set）每个成员关联一个 score，按 score 排序。这是做排行榜的最佳数据结构。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 游戏排行榜</span><br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_A"</span>, <span style="color:#b5cea8">1500</span>);<br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_B"</span>, <span style="color:#b5cea8">2300</span>);<br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_C"</span>, <span style="color:#b5cea8">1800</span>);<br/><br/><span style="color:#6a9955">// Top <span style="color:#b5cea8">10</span> 排行榜（降序）</span><br/>Set&lt;ZSetOperations.TypedTuple&lt;<span style="color:#4ec9b0">String</span>&gt;&gt; top10 = redisTemplate.opsForZSet()<br/>    .reverseRangeWithScores(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#b5cea8">0</span>, <span style="color:#b5cea8">9</span>);<br/><br/><span style="color:#6a9955">// 查询玩家排名（从 <span style="color:#b5cea8">0</span> 开始）</span><br/>Long rank = redisTemplate.opsForZSet()<br/>    .reverseRank(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_A"</span>);<br/><br/><span style="color:#6a9955">// 分数区间查询（<span style="color:#b5cea8">1000</span>-<span style="color:#b5cea8">2000</span> 分的玩家）</span><br/>Set&lt;<span style="color:#4ec9b0">String</span>&gt; <span style="color:#4ec9b0">range</span> = redisTemplate.opsForZSet()<br/>    .rangeByScore(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#b5cea8">1000</span>, <span style="color:#b5cea8">2000</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">延时队列</strong>也是 ZSet 的经典用法：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 用当前时间戳做 score，任务 <span style="color:#4ec9b0">JSON</span> 做 value</span><br/>long executeTime = System.currentTimeMillis() + <span style="color:#b5cea8">60</span>_000; <span style="color:#6a9955">// <span style="color:#b5cea8">1</span>分钟后执行</span><br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"delay:queue"</span>, taskJson, executeTime);<br/><br/><span style="color:#6a9955">// 定时扫描：取出所有到期的任务</span><br/>long now = System.currentTimeMillis();<br/>Set&lt;<span style="color:#4ec9b0">String</span>&gt; dueTasks = redisTemplate.opsForZSet()<br/>    .rangeByScore(<span style="color:#ce9178">"delay:queue"</span>, <span style="color:#b5cea8">0</span>, now);<br/><span style="color:#569cd6">for</span> (<span style="color:#4ec9b0">String</span> task : dueTasks) {<br/>    <span style="color:#6a9955">// 处理任务并从队列移除</span><br/>    redisTemplate.opsForZSet().remove(<span style="color:#ce9178">"delay:queue"</span>, task);<br/>    processTask(task);<br/>}<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试追问：ZSet 底层怎么排序的？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">小 ZSet 用 ziplist（按 score 有序排列），大 ZSet 用 skiplist + hashtable。skiplist 实现 O(logN) 的范围查询，hashtable 实现 O(1) 的单点查询。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">Bitmap 与 HyperLogLog：容易被忽略的利器</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">严格来说这两个不算独立数据类型，是 String 的位操作扩展，但面试频率很高。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Bitmap 做签到系统</strong>：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 用户签到：第 <span style="color:#b5cea8">15</span> 天签到</span><br/>redisTemplate.opsForValue().setBit(<span style="color:#ce9178">"checkin:<span style="color:#b5cea8">1001</span>:<span style="color:#b5cea8">202606</span>"</span>, <span style="color:#b5cea8">15</span>, <span style="color:#569cd6">true</span>);<br/><br/><span style="color:#6a9955">// 检查某天是否签到</span><br/><span style="color:#4ec9b0">Boolean</span> checked = redisTemplate.opsForValue().getBit(<span style="color:#ce9178">"checkin:<span style="color:#b5cea8">1001</span>:<span style="color:#b5cea8">202606</span>"</span>, <span style="color:#b5cea8">15</span>);<br/><br/><span style="color:#6a9955">// 统计本月签到天数</span><br/>Long checkinDays = redisTemplate.execute(<br/>    (RedisCallback&lt;Long&gt;) connection -&gt;<br/>        connection.bitCount(<span style="color:#ce9178">"checkin:<span style="color:#b5cea8">1001</span>:<span style="color:#b5cea8">202606</span>"</span>.getBytes())<br/>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">1 亿用户签到，每个用户每天 1 bit，总共 12.5MB。用 MySQL 存？1 亿行数据，你感受一下。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">HyperLogLog 做 UV 统计</strong>：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 记录用户访问</span><br/>redisTemplate.opsForHyperLogLog().add(<span style="color:#ce9178">"uv:<span style="color:#b5cea8">20260617</span>"</span>, <span style="color:#ce9178">"user_1001"</span>, <span style="color:#ce9178">"user_1002"</span>, <span style="color:#ce9178">"user_1003"</span>);<br/><br/><span style="color:#6a9955">// 统计独立访客数（误差约 <span style="color:#b5cea8">0.81</span>%）</span><br/>Long uv = redisTemplate.opsForHyperLogLog().size(<span style="color:#ce9178">"uv:<span style="color:#b5cea8">20260617</span>"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">1 亿独立用户 UV 统计，HyperLogLog 只占 12KB 内存。用 Set 去重？1 亿用户至少几百 MB。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">常见坑 &amp; 解决方案</h2>
+<table style="width:100%;border-collapse:separate;font-size: 16px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px">
+<thead>
+<tr>
+<th data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000">现象</th>
+<th data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000">原因</th>
+<th data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000">方案</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">Hash 内存比预期大</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">field 数量超过 512，编码从 ziplist 变 hashtable</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">拆分大 Hash，或调整 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">hash-max-ziplist-entries</code></td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">ZSet 排序不准</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">score 用了 Double，浮点精度丢失</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">用 Long 做 score，或放大为整数</td>
+</tr>
+<tr style="">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">List 消息丢失</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">消费者挂了没消费完</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">用 Stream 或加 BLPOP + ACK 机制</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">Bitmap 查询慢</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">key 太大（超过 512MB）</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">按天/月拆分 key</td>
+</tr>
+<tr style="">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">HyperLogLog 结果偏大</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">合并了多个 HLL</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">合并前确认数据源不重复</td>
+</tr>
+</tbody>
+</table>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">效果验证</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我做了一个简单的性能对比，100 万条数据：</p>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">操作</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">String (JSON)</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">Hash</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">ZSet</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">写入</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">1.2s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">1.5s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">2.1s</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读取单字段</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.3s（反序列化整个 JSON）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">修改单字段</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.8s（读+改+写）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">排行榜查询</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">N/A（需 DB 排序）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">N/A</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.01s</td>
+</tr>
+</tbody>
+</table>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Hash 在单字段操作上比 String 存 JSON 快一个数量级，因为不需要序列化和反序列化整个对象。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">总结</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 五种数据类型，每种都有明确的最佳实践：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">String</strong>：计数器、分布式锁、简单缓存</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Hash</strong>：存对象，字段级操作</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">List</strong>：简单队列（生产用 Stream）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Set</strong>：标签、共同好友、去重</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">ZSet</strong>：排行榜、延时队列</span></section></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">加上 Bitmap 和 HyperLogLog，覆盖了你 95% 的业务场景。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试的时候，别只说"String 存 JSON"。把每种类型的场景和底层实现讲清楚，面试官会觉得你真用过。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">下一篇讲分布式锁——从 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">setnx</code> 到 Redlock，4 种实现方案的完整对比。</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px"/>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">本文是「面向面试之 Redis」系列第 1 篇<br/>
+• 下一篇：Redis 系列二：分布式锁的 4 种实现方案——从 setnx 到 Redlock（待发布）</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px"/>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">觉得有用？评论区聊聊你在项目中最常用哪种 Redis 数据类型，踩过什么坑。关注我，后续 5 篇陆续更新。</p></section>
+</div>
+</div>
+<!-- 隐藏区域：存放纯微信 HTML（不含预览壳样式），复制时用这个 -->
+<div id="wechatHtml">
+<section data-darkmode-bgcolor="#1a1712" style="background-color:#ffffff;padding:16px"><h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">开头</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">说实话，用了 5 年 Redis，我见过太多人把 Redis 当 KV 存储用。String 存个 JSON、List 做个消息队列，完事了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">之前面试过不少候选人，问到 Redis 数据类型，基本都是 String 和 List 两个名字。再问 Hash 和 ZSet，一半人支支吾吾。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 的五种数据类型，每种都有独特的使用场景。面试官问你"Redis 数据类型怎么用"，回答"String 存 JSON"就太浅了。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">今天这篇，我不讲 API 文档，讲实战。每种类型怎么用最优雅、有什么坑、面试官追问怎么答。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">核心结论先行</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">String 存 JSON 是偷懒，Hash 存对象字段更新效率翻倍</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">ZSet 是排行榜神器，比数据库 ORDER BY 快 100 倍</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">Bitmap 做签到、在线状态，1 亿用户只占 12MB 内存</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">HyperLogLog 做 UV 统计，误差 0.81% 但内存只有 12KB</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">Set 做标签系统和共同好友，O(1) 判断成员存在</span></section></section>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">String：别只会存 JSON</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">很多人用 String 存对象的方式是这样的：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 反例：存整个 <span style="color:#4ec9b0">JSON</span></span><br/><span style="color:#4ec9b0">String</span> userJson = <span style="color:#4ec9b0">JSON</span>.toJSONString(user);<br/>redisTemplate.opsForValue().<span style="color:#4ec9b0">set</span>(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, userJson);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">问题在哪？如果只想改用户名，你得先 get 整个 JSON，改一个字段，再 set 回去。并发高的时候还有覆盖写风险。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">正确的做法——用 Hash：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 正解：Hash 存对象</span><br/>Map&lt;<span style="color:#4ec9b0">String</span>, <span style="color:#4ec9b0">String</span>&gt; userMap = <span style="color:#569cd6">new</span> HashMap&lt;&gt;();<br/>userMap.put(<span style="color:#ce9178">"name"</span>, <span style="color:#ce9178">"张三"</span>);<br/>userMap.put(<span style="color:#ce9178">"age"</span>, <span style="color:#ce9178">"<span style="color:#b5cea8">28</span>"</span>);<br/>userMap.put(<span style="color:#ce9178">"email"</span>, <span style="color:#ce9178">"zhangsan<span style="color:#c586c0">@example</span>.com"</span>);<br/><br/>redisTemplate.opsForHash().putAll(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, userMap);<br/><br/><span style="color:#6a9955">// 只改一个字段，不需要读写整个对象</span><br/>redisTemplate.opsForHash().put(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"name"</span>, <span style="color:#ce9178">"李四"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">String 适合的场景</strong>：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">计数器（阅读量、点赞数）：<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">INCR key</code></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">分布式 Session：存 JWT Token</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">分布式锁（后面系列二会详细讲）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px">简单缓存：对，简单场景下存 JSON 也没问题</span></section></section>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">Hash：存对象的最佳选择</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Hash 内部是 field-value 的映射，类似 Java 的 HashMap。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 获取单个字段</span><br/><span style="color:#4ec9b0">String</span> name = (<span style="color:#4ec9b0">String</span>) redisTemplate.opsForHash().get(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"name"</span>);<br/><br/><span style="color:#6a9955">// 批量获取</span><br/>List&lt;<span style="color:#4ec9b0">String</span>&gt; fields = Arrays.asList(<span style="color:#ce9178">"name"</span>, <span style="color:#ce9178">"age"</span>, <span style="color:#ce9178">"email"</span>);<br/>List&lt;<span style="color:#4ec9b0">Object</span>&gt; values = redisTemplate.opsForHash().multiGet(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, fields);<br/><br/><span style="color:#6a9955">// 字段自增（比如用户积分）</span><br/>redisTemplate.opsForHash().increment(<span style="color:#ce9178">"user:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"points"</span>, <span style="color:#b5cea8">10</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试常问：Hash 和 String 存对象有什么区别？</p>
+<table style="width:100%;border-collapse:separate;font-size: 16px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">维度</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">String 存 JSON</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">Hash 存对象</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">修改单字段</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读写整个 JSON</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">直接 HSET，O(1)</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">内存占用</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">有 JSON 冗余</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">编码优化后更省</td>
+</tr>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">并发安全</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">有覆盖风险</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">字段级操作更安全</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">序列化</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">依赖 JSON 库</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">原生支持</td>
+</tr>
+</tbody>
+</table>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 内部对小 Hash 用 ziplist 编码，内存比 String 省 30%-50%。当 Hash 的 field 数量超过 512 或者单个 value 超过 64 字节时，转为 hashtable。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">List：消息队列的双刃剑</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">List 最常被拿来做简单消息队列：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 生产者</span><br/>redisTemplate.opsForList().leftPush(<span style="color:#ce9178">"task:queue"</span>, taskJson);<br/><br/><span style="color:#6a9955">// 消费者</span><br/><span style="color:#4ec9b0">String</span> task = redisTemplate.opsForList().rightPop(<span style="color:#ce9178">"task:queue"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">但 List 做消息队列有几个坑：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">1</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">没有 ACK 机制</strong>：消息 pop 出来就没了，消费者挂了消息就丢</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">2</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">没有重试</strong>：消费失败只能自己实现重新 push</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span data-darkmode-bgcolor="#2a2720" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px">3</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">重复消费</strong>：多个消费者可能拿到同一个消息</span></section></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">生产环境用 Redis 做消息队列，建议用 <strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Stream</strong>（Redis 5.0+）。Stream 有 Consumer Group、ACK、消息持久化，是 List 的上位替代。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// Stream 发布消息</span><br/>Map&lt;<span style="color:#4ec9b0">String</span>, <span style="color:#4ec9b0">String</span>&gt; msg = <span style="color:#569cd6">new</span> HashMap&lt;&gt;();<br/>msg.put(<span style="color:#ce9178">"userId"</span>, <span style="color:#ce9178">"<span style="color:#b5cea8">1001</span>"</span>);<br/>msg.put(<span style="color:#ce9178">"action"</span>, <span style="color:#ce9178">"pay"</span>);<br/>redisTemplate.opsForStream().add(<span style="color:#ce9178">"order:stream"</span>, msg);<br/><br/><span style="color:#6a9955">// Stream 消费消息（带消费者组）</span><br/>List&lt;MapRecord&lt;<span style="color:#4ec9b0">String</span>, <span style="color:#4ec9b0">Object</span>, <span style="color:#4ec9b0">Object</span>&gt;&gt; records = redisTemplate.opsForStream()<br/>    .read(Consumer.<span style="color:#569cd6">from</span>(<span style="color:#ce9178">"order-group"</span>, <span style="color:#ce9178">"consumer-<span style="color:#b5cea8">1</span>"</span>),<br/>          StreamReadOptions.empty().count(<span style="color:#b5cea8">10</span>),<br/>          StreamOffset.create(<span style="color:#ce9178">"order:stream"</span>, ReadOffset.lastConsumed()));<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">如果业务对消息丢失不敏感（比如日志收集），List 够用了。金融级场景老老实实用 Kafka 或者 RabbitMQ。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">Set：标签系统与共同好友</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Set 的核心能力是 O(1) 判断成员存在 + 集合运算。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">标签系统</strong>：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 给用户打标签</span><br/>redisTemplate.opsForSet().add(<span style="color:#ce9178">"user:tags:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"VIP"</span>, <span style="color:#ce9178">"活跃用户"</span>, <span style="color:#ce9178">"高消费"</span>);<br/><br/><span style="color:#6a9955">// 判断是否是 VIP</span><br/><span style="color:#4ec9b0">Boolean</span> isVip = redisTemplate.opsForSet().isMember(<span style="color:#ce9178">"user:tags:<span style="color:#b5cea8">1001</span>"</span>, <span style="color:#ce9178">"VIP"</span>);<br/><br/><span style="color:#6a9955">// 获取用户所有标签</span><br/>Set&lt;<span style="color:#4ec9b0">Object</span>&gt; tags = redisTemplate.opsForSet().members(<span style="color:#ce9178">"user:tags:<span style="color:#b5cea8">1001</span>"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">共同好友</strong>——Set 的交集运算：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 用户 A 的好友</span><br/>redisTemplate.opsForSet().add(<span style="color:#ce9178">"friends:A"</span>, <span style="color:#ce9178">"B"</span>, <span style="color:#ce9178">"C"</span>, <span style="color:#ce9178">"D"</span>, <span style="color:#ce9178">"E"</span>);<br/><span style="color:#6a9955">// 用户 B 的好友</span><br/>redisTemplate.opsForSet().add(<span style="color:#ce9178">"friends:B"</span>, <span style="color:#ce9178">"C"</span>, <span style="color:#ce9178">"D"</span>, <span style="color:#ce9178">"F"</span>, <span style="color:#ce9178">"G"</span>);<br/><br/><span style="color:#6a9955">// 共同好友 = 交集</span><br/>Set&lt;<span style="color:#4ec9b0">Object</span>&gt; commonFriends = redisTemplate.opsForSet()<br/>    .intersect(<span style="color:#ce9178">"friends:A"</span>, <span style="color:#ce9178">"friends:B"</span>);<br/><span style="color:#6a9955">// 结果：[C, D]</span><br/><br/><span style="color:#6a9955">// 推荐好友 = A 有但 B 没有的（差集）</span><br/>Set&lt;<span style="color:#4ec9b0">Object</span>&gt; recommendForB = redisTemplate.opsForSet()<br/>    .difference(<span style="color:#ce9178">"friends:A"</span>, <span style="color:#ce9178">"friends:B"</span>);<br/><span style="color:#6a9955">// 结果：[E]</span><br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试追问：Set 底层怎么实现的？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">小 Set 用 intset（整数数组，有序存储），大 Set 用 hashtable。当 Set 中所有元素都是整数且数量不超过 512 时用 intset，否则转 hashtable。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">ZSet：排行榜的终极方案</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">ZSet（Sorted Set）每个成员关联一个 score，按 score 排序。这是做排行榜的最佳数据结构。</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 游戏排行榜</span><br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_A"</span>, <span style="color:#b5cea8">1500</span>);<br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_B"</span>, <span style="color:#b5cea8">2300</span>);<br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_C"</span>, <span style="color:#b5cea8">1800</span>);<br/><br/><span style="color:#6a9955">// Top <span style="color:#b5cea8">10</span> 排行榜（降序）</span><br/>Set&lt;ZSetOperations.TypedTuple&lt;<span style="color:#4ec9b0">String</span>&gt;&gt; top10 = redisTemplate.opsForZSet()<br/>    .reverseRangeWithScores(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#b5cea8">0</span>, <span style="color:#b5cea8">9</span>);<br/><br/><span style="color:#6a9955">// 查询玩家排名（从 <span style="color:#b5cea8">0</span> 开始）</span><br/>Long rank = redisTemplate.opsForZSet()<br/>    .reverseRank(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#ce9178">"player_A"</span>);<br/><br/><span style="color:#6a9955">// 分数区间查询（<span style="color:#b5cea8">1000</span>-<span style="color:#b5cea8">2000</span> 分的玩家）</span><br/>Set&lt;<span style="color:#4ec9b0">String</span>&gt; <span style="color:#4ec9b0">range</span> = redisTemplate.opsForZSet()<br/>    .rangeByScore(<span style="color:#ce9178">"game:rank"</span>, <span style="color:#b5cea8">1000</span>, <span style="color:#b5cea8">2000</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">延时队列</strong>也是 ZSet 的经典用法：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 用当前时间戳做 score，任务 <span style="color:#4ec9b0">JSON</span> 做 value</span><br/>long executeTime = System.currentTimeMillis() + <span style="color:#b5cea8">60</span>_000; <span style="color:#6a9955">// <span style="color:#b5cea8">1</span>分钟后执行</span><br/>redisTemplate.opsForZSet().add(<span style="color:#ce9178">"delay:queue"</span>, taskJson, executeTime);<br/><br/><span style="color:#6a9955">// 定时扫描：取出所有到期的任务</span><br/>long now = System.currentTimeMillis();<br/>Set&lt;<span style="color:#4ec9b0">String</span>&gt; dueTasks = redisTemplate.opsForZSet()<br/>    .rangeByScore(<span style="color:#ce9178">"delay:queue"</span>, <span style="color:#b5cea8">0</span>, now);<br/><span style="color:#569cd6">for</span> (<span style="color:#4ec9b0">String</span> task : dueTasks) {<br/>    <span style="color:#6a9955">// 处理任务并从队列移除</span><br/>    redisTemplate.opsForZSet().remove(<span style="color:#ce9178">"delay:queue"</span>, task);<br/>    processTask(task);<br/>}<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试追问：ZSet 底层怎么排序的？</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">小 ZSet 用 ziplist（按 score 有序排列），大 ZSet 用 skiplist + hashtable。skiplist 实现 O(logN) 的范围查询，hashtable 实现 O(1) 的单点查询。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">Bitmap 与 HyperLogLog：容易被忽略的利器</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">严格来说这两个不算独立数据类型，是 String 的位操作扩展，但面试频率很高。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Bitmap 做签到系统</strong>：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 用户签到：第 <span style="color:#b5cea8">15</span> 天签到</span><br/>redisTemplate.opsForValue().setBit(<span style="color:#ce9178">"checkin:<span style="color:#b5cea8">1001</span>:<span style="color:#b5cea8">202606</span>"</span>, <span style="color:#b5cea8">15</span>, <span style="color:#569cd6">true</span>);<br/><br/><span style="color:#6a9955">// 检查某天是否签到</span><br/><span style="color:#4ec9b0">Boolean</span> checked = redisTemplate.opsForValue().getBit(<span style="color:#ce9178">"checkin:<span style="color:#b5cea8">1001</span>:<span style="color:#b5cea8">202606</span>"</span>, <span style="color:#b5cea8">15</span>);<br/><br/><span style="color:#6a9955">// 统计本月签到天数</span><br/>Long checkinDays = redisTemplate.execute(<br/>    (RedisCallback&lt;Long&gt;) connection -&gt;<br/>        connection.bitCount(<span style="color:#ce9178">"checkin:<span style="color:#b5cea8">1001</span>:<span style="color:#b5cea8">202606</span>"</span>.getBytes())<br/>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">1 亿用户签到，每个用户每天 1 bit，总共 12.5MB。用 MySQL 存？1 亿行数据，你感受一下。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">HyperLogLog 做 UV 统计</strong>：</p>
+<section data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px"><section data-darkmode-bgcolor="#141210" style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code data-darkmode-color="#7fa8c9" style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace"><span style="color:#6a9955">// 记录用户访问</span><br/>redisTemplate.opsForHyperLogLog().add(<span style="color:#ce9178">"uv:<span style="color:#b5cea8">20260617</span>"</span>, <span style="color:#ce9178">"user_1001"</span>, <span style="color:#ce9178">"user_1002"</span>, <span style="color:#ce9178">"user_1003"</span>);<br/><br/><span style="color:#6a9955">// 统计独立访客数（误差约 <span style="color:#b5cea8">0.81</span>%）</span><br/>Long uv = redisTemplate.opsForHyperLogLog().size(<span style="color:#ce9178">"uv:<span style="color:#b5cea8">20260617</span>"</span>);<br/></code></pre></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">1 亿独立用户 UV 统计，HyperLogLog 只占 12KB 内存。用 Set 去重？1 亿用户至少几百 MB。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">常见坑 &amp; 解决方案</h2>
+<table style="width:100%;border-collapse:separate;font-size: 16px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px">
+<thead>
+<tr>
+<th data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000">现象</th>
+<th data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000">原因</th>
+<th data-darkmode-bgcolor="#1e1b16" style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000">方案</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">Hash 内存比预期大</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">field 数量超过 512，编码从 ziplist 变 hashtable</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">拆分大 Hash，或调整 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">hash-max-ziplist-entries</code></td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">ZSet 排序不准</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">score 用了 Double，浮点精度丢失</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">用 Long 做 score，或放大为整数</td>
+</tr>
+<tr style="">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">List 消息丢失</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">消费者挂了没消费完</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">用 Stream 或加 BLPOP + ACK 机制</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">Bitmap 查询慢</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">key 太大（超过 512MB）</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">按天/月拆分 key</td>
+</tr>
+<tr style="">
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">HyperLogLog 结果偏大</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">合并了多个 HLL</td>
+<td data-darkmode-bgcolor="#1e1e1e" data-darkmode-color="#c0c0c0" style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000">合并前确认数据源不重复</td>
+</tr>
+</tbody>
+</table>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">效果验证</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">我做了一个简单的性能对比，100 万条数据：</p>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">操作</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">String (JSON)</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">Hash</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">ZSet</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">写入</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">1.2s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">1.5s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">2.1s</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读取单字段</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.3s（反序列化整个 JSON）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">修改单字段</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.8s（读+改+写）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.05s</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">排行榜查询</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">N/A（需 DB 排序）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">N/A</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">0.01s</td>
+</tr>
+</tbody>
+</table>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Hash 在单字段操作上比 String 存 JSON 快一个数量级，因为不需要序列化和反序列化整个对象。</p>
+<h2 data-darkmode-color="#e0dcd4" style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px">总结</h2>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">Redis 五种数据类型，每种都有明确的最佳实践：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">String</strong>：计数器、分布式锁、简单缓存</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Hash</strong>：存对象，字段级操作</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">List</strong>：简单队列（生产用 Stream）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">Set</strong>：标签、共同好友、去重</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px"><strong data-darkmode-color="#e0a060" style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline">ZSet</strong>：排行榜、延时队列</span></section></section>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">加上 Bitmap 和 HyperLogLog，覆盖了你 95% 的业务场景。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">面试的时候，别只说"String 存 JSON"。把每种类型的场景和底层实现讲清楚，面试官会觉得你真用过。</p>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">下一篇讲分布式锁——从 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">setnx</code> 到 Redlock，4 种实现方案的完整对比。</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px"/>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">本文是「面向面试之 Redis」系列第 1 篇<br/>
+• 下一篇：Redis 系列二：分布式锁的 4 种实现方案——从 setnx 到 Redlock（待发布）</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px"/>
+<p data-darkmode-color="#c8c8c8" style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px">觉得有用？评论区聊聊你在项目中最常用哪种 Redis 数据类型，踩过什么坑。关注我，后续 5 篇陆续更新。</p></section>
+</div>
+<script>
+function switchFontSize(size) {
+    // 更新按钮状态
+    document.querySelectorAll('.fs-btn').forEach(function(btn) {
+        if (parseInt(btn.dataset.size) === size) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 修改可见预览区和隐藏复制区的 p 标签
+    ['articleContent', 'wechatHtml'].forEach(function(id) {
+        var container = document.getElementById(id);
+        if (!container) return;
+        container.querySelectorAll('p').forEach(function(p) {
+            var currentSize = parseInt(window.getComputedStyle(p).fontSize);
+            if (currentSize >= 14 && currentSize <= 16) {
+                p.style.fontSize = size + 'px';
+                p.style.lineHeight = size === 16 ? '1.75' : '1.8';
+            }
+        });
+        // 修改列表项文字
+        container.querySelectorAll('[style*="font-size:15px"]').forEach(function(el) {
+            if (el.tagName === 'SPAN' || el.tagName === 'SECTION') {
+                el.style.fontSize = size + 'px';
+            }
+        });
+    });
+
+    // 保存选择到 localStorage
+    localStorage.setItem('wechat-format-fontsize', size);
+}
+
+// 页面加载时恢复上次选择
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('wechat-format-fontsize');
+    if (saved && saved !== '15') {
+        switchFontSize(parseInt(saved));
+    }
+});
+
+function copyToWechat() {
+    const source = document.getElementById('wechatHtml');
+    const range = document.createRange();
+    range.selectNodeContents(source);
+
+    // 临时让元素可见（否则某些浏览器不允许复制隐藏元素）
+    source.style.position = 'fixed';
+    source.style.left = '0';
+    source.style.top = '0';
+    source.style.opacity = '0.01';
+    source.style.width = '375px';
+    source.style.visibility = 'visible';
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '已复制!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '复制到微信';
+            btn.classList.remove('copied');
+        }, 2500);
+    } catch(e) {
+        // fallback: 尝试 Clipboard API
+        const html = source.innerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制到微信';
+                btn.classList.remove('copied');
+            }, 2500);
+        }).catch(() => {
+            alert('复制失败，请手动选中文章内容复制');
+        });
+    }
+
+    // 恢复隐藏
+    source.style.position = 'absolute';
+    source.style.left = '-9999px';
+    source.style.top = '-9999px';
+    source.style.opacity = '';
+    source.style.width = '';
+    source.style.visibility = 'hidden';
+
+    sel.removeAllRanges();
+}
+</script>
+</body>
+</html>

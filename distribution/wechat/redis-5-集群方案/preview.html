@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sentinel.conf - 微信排版预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+}
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.toolbar-info {
+    font-size: 13px;
+    color: #666;
+}
+.toolbar-info span {
+    margin-right: 12px;
+}
+.toolbar-info .theme-name {
+    background: #f5f5f5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+}
+.copy-btn {
+    padding: 10px 24px;
+    background: #07c160;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.copy-btn:hover { background: #06ae56; transform: translateY(-1px); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied {
+    background: #34c759;
+}
+.phone-frame {
+    max-width: 415px;
+    margin: 76px auto 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.phone-header {
+    background: #ededed;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 1px solid #e0e0e0;
+}
+.article-content {
+    padding: 20px;
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 隐藏的纯微信 HTML，用于复制 */
+#wechatHtml {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 375px;          /* 限宽，避免子 section 撑到视口右边漏出色块 */
+    overflow: hidden;
+    visibility: hidden;    /* 复制时 JS 会临时恢复 visibility */
+    pointer-events: none;
+}
+/* ── Font Size Selector ── */
+.font-size-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px auto;
+    padding: 8px 0;
+    max-width: 415px;
+}
+.fs-label {
+    font-size: 13px;
+    color: #999;
+}
+.fs-btn {
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.fs-btn:hover {
+    border-color: #07C160;
+    color: #07C160;
+}
+.fs-btn.active {
+    background: #07C160;
+    border-color: #07C160;
+    color: #fff;
+}
+@media (max-width: 480px) {
+    .phone-frame {
+        margin: 60px 0 20px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toolbar {
+        padding: 8px 12px;
+    }
+    .copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <div class="toolbar-info">
+            <span class="theme-name">报纸</span>
+            <span>1,806 字</span>
+        </div>
+    </div>
+    <button class="copy-btn" onclick="copyToWechat()">复制到微信</button>
+</div>
+
+<div class="font-size-selector">
+    <span class="fs-label">字号</span>
+    <button class="fs-btn active" data-size="15" onclick="switchFontSize(15)">15px</button>
+    <button class="fs-btn" data-size="16" onclick="switchFontSize(16)">16px</button>
+</div>
+
+<div class="phone-frame">
+    <div class="phone-header">微信公众号预览</div>
+    <div class="article-content" id="articleContent">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">开头</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">说实话，面试被问到 Redis 集群方案的时候，我见过太多人直接懵了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">不是因为他们不会用 Redis，而是因为 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis 的集群方案有三个：主从、哨兵、Cluster</strong>。面试官随便一组合出题，就能把节奏带乱——"你说说主从和哨兵的区别""哨兵和 Cluster 什么关系""你们生产用的什么方案，为什么？"</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我之前也踩过坑。刚工作那会儿，项目用 Redis 就是单机部署，崩了就重启。后来流量上来，单机扛不住了，领导让我搞集群。我查资料发现 Redis 居然有三种方案，每种方案解决的问题不一样，选错了不只是性能问题，是数据问题。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">今天一次给你讲清楚三种方案的区别、各自解决了什么问题、以及生产环境到底选哪个。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">核心结论先行</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">主从复制</strong>：解决的是"单点读压力"——把读流量分散到从库，主库挂了要手动切换</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">哨兵模式</strong>：解决的是"高可用"——在主从基础上加了自动故障转移，主库挂了哨兵自动选新主</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Cluster 模式</strong>：解决的是"水平扩展"——数据分片到多个节点，每个节点持有部分数据，支持自动扩容</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">生产建议</strong>：数据量 &lt; 10GB 用哨兵，&gt; 10GB 用 Cluster；读写分离直接用哨兵+从库</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案一：主从复制（Master-Slave Replication）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">架构原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">最基础的集群形态。一个主库（Master）负责写，多个从库（Slave）同步数据并提供读服务。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">客户端&nbsp;→&nbsp;写操作&nbsp;→&nbsp;Master（读写）<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;异步同步<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌───┴───┐<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave1&nbsp;&nbsp;Slave2（只读）<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么配</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在从库的 redis.conf 里加一行就行：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">replicaof&nbsp;192.168.1.100&nbsp;6379&nbsp;&nbsp;&nbsp;#&nbsp;指向主库的&nbsp;IP&nbsp;和端口<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">从库连上主库后，主库会做一次 BGSAVE 把 RDB 文件传给从库，之后持续增量同步。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">这个方案有什么问题？</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">最大的问题是主库挂了怎么办？</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我遇到过真实案例：凌晨 2 点主库所在的服务器 OOM 挂了，从库还在，但因为没有自动切换机制，我半夜爬起来手动执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SLAVEOF NO ONE</code> 把一个从库升为主库，再改其他从库的配置指向新主。整个过程花了 20 分钟，业务停了 20 分钟。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这就是主从的局限——<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">能扛读，扛不了故障</strong>。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案二：哨兵模式（Sentinel）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">架构原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在主从的基础上加了一个"监工"——哨兵进程。它监控所有 Redis 节点的健康状态，主库挂了自动把某个从库升级为主库，应用端无感知。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌─&nbsp;Sentinels（至少&nbsp;3&nbsp;个节点，奇数）<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;监控&nbsp;+&nbsp;选举<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>客户端&nbsp;→&nbsp;Master&nbsp;→&nbsp;同步&nbsp;→&nbsp;Slave1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave2<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">哨兵怎么判定主库挂了？</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">分两步：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">主观下线</strong>：某个哨兵发现主库 ping 不通了（<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">down-after-milliseconds</code> 内无响应）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">客观下线</strong>：多数哨兵（quorum）都认为主库挂了，才真正触发切换</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">为什么要两步？防止网络抖动误判。一个哨兵看走眼不算，大家都说挂了才是真挂。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">关键配置</h3>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;sentinel.conf</span><br>sentinel&nbsp;monitor&nbsp;mymaster&nbsp;<span style="color:#b5cea8">127.0</span>.<span style="color:#b5cea8">0.1</span>&nbsp;<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">2</span>&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;<span style="color:#b5cea8">2</span>&nbsp;个哨兵同意就切换<br>sentinel&nbsp;down-after-milliseconds&nbsp;mymaster&nbsp;<span style="color:#b5cea8">5000</span>&nbsp;#&nbsp;<span style="color:#b5cea8">5</span>&nbsp;秒没响应认为挂了<br>sentinel&nbsp;failover-timeout&nbsp;mymaster&nbsp;<span style="color:#b5cea8">60000</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;切换超时&nbsp;<span style="color:#b5cea8">60</span>&nbsp;秒<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">哨兵一定要部署奇数个（至少 3 个）</strong>。只有 2 个的话，一个挂了剩下的 1 个凑不齐 quorum，永远切不了。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">实际效果</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我自己测试过哨兵切换时间：在 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">down-after-milliseconds 5000</code> 配置下，从主库挂掉到新主库开始服务，大概耗时 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">10-15 秒</strong>。其中 5 秒是判定时间，剩下 5-10 秒是选举 + 通知客户端。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">对于大部分内部系统，15 秒的故障转移是可以接受的。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案三：Cluster 模式</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">架构原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">前面的主从和哨兵，所有数据都在同一台机器上（主库），哨兵虽然解决了高可用，但<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">没有解决单机内存上限</strong>。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Cluster 不一样——它把数据分片（Sharding）到多个节点，每个节点只负责一部分数据。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户端<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>&nbsp;&nbsp;&nbsp;&nbsp;┌────────────┼────────────┐<br>&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>&nbsp;&nbsp;Node1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Node2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Node3<br>(槽&nbsp;0-5460)&nbsp;(槽&nbsp;5461-10922)&nbsp;(槽&nbsp;10923-16383)<br>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>&nbsp;&nbsp;Slave1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave3<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">数据怎么分？——哈希槽（Hash Slot）</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这是面试高频考点。Redis Cluster 有 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">16384 个哈希槽</strong>，每个 key 用 CRC16 算出一个值，对 16384 取模，落到对应的槽上。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">CRC16(&quot;user:1001&quot;)&nbsp;%&nbsp;16384&nbsp;=&nbsp;12345&nbsp;→&nbsp;Node2<br>CRC16(&quot;product:2001&quot;)&nbsp;%&nbsp;16384&nbsp;=&nbsp;3000&nbsp;→&nbsp;Node1<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">当你用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">redis-cli</code> 连上 Cluster 时，客户端会先拿到"槽位映射表"（Cluster slots），知道哪个槽在哪个节点。访问某个 key 时，如果刚好在本节点就直接处理，不在就返回 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">MOVED</code> 重定向，客户端再跳到正确节点。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">关键配置</h3>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;redis.conf（每个节点）</span><br>cluster-enabled&nbsp;yes<br>cluster-config-file&nbsp;nodes-<span style="color:#b5cea8">6379.</span>conf<br>cluster-node-timeout&nbsp;<span style="color:#b5cea8">5000</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">启动节点后，用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">redis-cli --cluster create</code> 创建集群：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">redis-cli&nbsp;--cluster&nbsp;create&nbsp;\<br>&nbsp;&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.100</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.101</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.102</span>:<span style="color:#b5cea8">6379</span>&nbsp;\<br>&nbsp;&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.103</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.104</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.105</span>:<span style="color:#b5cea8">6379</span>&nbsp;\<br>&nbsp;&nbsp;--cluster-replicas&nbsp;<span style="color:#b5cea8">1</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">前三个是主节点，后三个是每个主节点的从节点。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">注意事项</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">不支持多 key 操作</strong>（除非这些 key 在同一个槽，用 hash tag）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">事务有限制</strong>：只能在同一个节点的事务</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">客户端需要 Cluster 支持</strong>：JedisCluster、Lettuce、Redisson 都支持</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">完整对比表</h2>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">维度</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">主从复制</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">哨兵模式</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">Cluster</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">数据分片</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">否（全量数据）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">否（全量数据）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">是</strong>（16384 槽）</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高可用</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 手动切换</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 自动故障转移</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 自动故障转移</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">写性能</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">单点写</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">单点写</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">多节点写</strong></td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读性能</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">多从库读</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">多从库读</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">多节点读</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">自动扩缩容</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅（在线迁移槽）</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">配置复杂度</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐（简单）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐（稍复杂）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐⭐⭐（复杂）</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">客户端要求</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">普通客户端</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">普通客户端</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">需 Cluster 支持</strong></td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">适用场景</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读多写少、可容忍手动恢复</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高可用、单机内存够用</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">大数据量、需要水平扩展</td>
+</tr>
+</tbody>
+</table>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">生产环境到底怎么选？</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">三种方案不是递进关系，是解决不同问题的。</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">如果面试官问你这个问题，你可以按这个思路回答：</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">数据量 &lt; 10GB，需要高可用 → 选哨兵。</strong><br />
+配置简单，10-15 秒自动切换，运维成本低。大部分中小公司的 Redis 都是这个规模。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">数据量 &gt; 10GB，或者未来会增长到 10GB+ → 选 Cluster。</strong><br />
+单机 32GB 内存存满了 Redis，BGSAVE 的时候 fork 子进程可能把内存翻倍，直接 OOM。Cluster 天然解决了这个问题。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">如果你只想要读写分离，不关心自动切换 → 主从就够了。</strong><br />
+但说实话现在很少用了——哨兵没有额外硬件成本，只是多了几个 Sentinel 进程（几乎不占资源），我实在想不出什么场景应该选裸主从而不是哨兵。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">扩展 &amp; 进阶方向</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis 7.0 的 Redis Functions</strong>：可以替代 Lua 脚本，在集群场景下更友好</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">阿里云 Redis 的 Proxy 模式</strong>：对客户端透明，底层自动分片，适合不想改客户端代码的场景</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis Cluster 的 resharding</strong>：在线迁移槽，但会影响性能，建议低峰期操作</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">参考资料</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis Cluster Tutorial<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[1]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis Sentinel Documentation<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[2]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis Replication<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[3]</sup></span></section></section>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px">
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">📌 本文是「面向面试之 Redis」系列第 5 篇<br />
+• 上一篇：Redis 系列四：Redis 持久化——RDB vs AOF，生产环境到底怎么选<br />
+• 下一篇：Redis 系列六：Redis 内存淘汰策略与 LRU 算法实现原理（待发布）</p></section>
+<section style="margin-top:32px;padding-top:16px;border-top:1px solid #d5cfc5">
+<p style="font-size:14px;font-weight:bold;color:#999999;margin-bottom:12px" data-darkmode-color="#888888">参考链接</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[1] Redis Cluster Tutorial: https://redis.io/docs/management/scaling/</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[2] Redis Sentinel Documentation: https://redis.io/docs/management/sentinel/</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[3] Redis Replication: https://redis.io/docs/management/replication/</p>
+</section>
+    </div>
+</div>
+
+<!-- 隐藏区域：存放纯微信 HTML（不含预览壳样式），复制时用这个 -->
+<div id="wechatHtml">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">开头</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">说实话，面试被问到 Redis 集群方案的时候，我见过太多人直接懵了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">不是因为他们不会用 Redis，而是因为 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis 的集群方案有三个：主从、哨兵、Cluster</strong>。面试官随便一组合出题，就能把节奏带乱——"你说说主从和哨兵的区别""哨兵和 Cluster 什么关系""你们生产用的什么方案，为什么？"</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我之前也踩过坑。刚工作那会儿，项目用 Redis 就是单机部署，崩了就重启。后来流量上来，单机扛不住了，领导让我搞集群。我查资料发现 Redis 居然有三种方案，每种方案解决的问题不一样，选错了不只是性能问题，是数据问题。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">今天一次给你讲清楚三种方案的区别、各自解决了什么问题、以及生产环境到底选哪个。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">核心结论先行</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">主从复制</strong>：解决的是"单点读压力"——把读流量分散到从库，主库挂了要手动切换</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">哨兵模式</strong>：解决的是"高可用"——在主从基础上加了自动故障转移，主库挂了哨兵自动选新主</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Cluster 模式</strong>：解决的是"水平扩展"——数据分片到多个节点，每个节点持有部分数据，支持自动扩容</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">生产建议</strong>：数据量 &lt; 10GB 用哨兵，&gt; 10GB 用 Cluster；读写分离直接用哨兵+从库</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案一：主从复制（Master-Slave Replication）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">架构原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">最基础的集群形态。一个主库（Master）负责写，多个从库（Slave）同步数据并提供读服务。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">客户端&nbsp;→&nbsp;写操作&nbsp;→&nbsp;Master（读写）<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;异步同步<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌───┴───┐<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave1&nbsp;&nbsp;Slave2（只读）<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么配</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在从库的 redis.conf 里加一行就行：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">replicaof&nbsp;192.168.1.100&nbsp;6379&nbsp;&nbsp;&nbsp;#&nbsp;指向主库的&nbsp;IP&nbsp;和端口<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">从库连上主库后，主库会做一次 BGSAVE 把 RDB 文件传给从库，之后持续增量同步。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">这个方案有什么问题？</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">最大的问题是主库挂了怎么办？</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我遇到过真实案例：凌晨 2 点主库所在的服务器 OOM 挂了，从库还在，但因为没有自动切换机制，我半夜爬起来手动执行 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SLAVEOF NO ONE</code> 把一个从库升为主库，再改其他从库的配置指向新主。整个过程花了 20 分钟，业务停了 20 分钟。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这就是主从的局限——<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">能扛读，扛不了故障</strong>。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案二：哨兵模式（Sentinel）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">架构原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在主从的基础上加了一个"监工"——哨兵进程。它监控所有 Redis 节点的健康状态，主库挂了自动把某个从库升级为主库，应用端无感知。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌─&nbsp;Sentinels（至少&nbsp;3&nbsp;个节点，奇数）<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;监控&nbsp;+&nbsp;选举<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>客户端&nbsp;→&nbsp;Master&nbsp;→&nbsp;同步&nbsp;→&nbsp;Slave1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave2<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">哨兵怎么判定主库挂了？</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">分两步：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">主观下线</strong>：某个哨兵发现主库 ping 不通了（<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">down-after-milliseconds</code> 内无响应）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">客观下线</strong>：多数哨兵（quorum）都认为主库挂了，才真正触发切换</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">为什么要两步？防止网络抖动误判。一个哨兵看走眼不算，大家都说挂了才是真挂。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">关键配置</h3>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;sentinel.conf</span><br>sentinel&nbsp;monitor&nbsp;mymaster&nbsp;<span style="color:#b5cea8">127.0</span>.<span style="color:#b5cea8">0.1</span>&nbsp;<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">2</span>&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;<span style="color:#b5cea8">2</span>&nbsp;个哨兵同意就切换<br>sentinel&nbsp;down-after-milliseconds&nbsp;mymaster&nbsp;<span style="color:#b5cea8">5000</span>&nbsp;#&nbsp;<span style="color:#b5cea8">5</span>&nbsp;秒没响应认为挂了<br>sentinel&nbsp;failover-timeout&nbsp;mymaster&nbsp;<span style="color:#b5cea8">60000</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;切换超时&nbsp;<span style="color:#b5cea8">60</span>&nbsp;秒<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">哨兵一定要部署奇数个（至少 3 个）</strong>。只有 2 个的话，一个挂了剩下的 1 个凑不齐 quorum，永远切不了。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">实际效果</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我自己测试过哨兵切换时间：在 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">down-after-milliseconds 5000</code> 配置下，从主库挂掉到新主库开始服务，大概耗时 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">10-15 秒</strong>。其中 5 秒是判定时间，剩下 5-10 秒是选举 + 通知客户端。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">对于大部分内部系统，15 秒的故障转移是可以接受的。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案三：Cluster 模式</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">架构原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">前面的主从和哨兵，所有数据都在同一台机器上（主库），哨兵虽然解决了高可用，但<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">没有解决单机内存上限</strong>。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Cluster 不一样——它把数据分片（Sharding）到多个节点，每个节点只负责一部分数据。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;客户端<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>&nbsp;&nbsp;&nbsp;&nbsp;┌────────────┼────────────┐<br>&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>&nbsp;&nbsp;Node1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Node2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Node3<br>(槽&nbsp;0-5460)&nbsp;(槽&nbsp;5461-10922)&nbsp;(槽&nbsp;10923-16383)<br>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>&nbsp;&nbsp;Slave1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slave3<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">数据怎么分？——哈希槽（Hash Slot）</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这是面试高频考点。Redis Cluster 有 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">16384 个哈希槽</strong>，每个 key 用 CRC16 算出一个值，对 16384 取模，落到对应的槽上。</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">CRC16(&quot;user:1001&quot;)&nbsp;%&nbsp;16384&nbsp;=&nbsp;12345&nbsp;→&nbsp;Node2<br>CRC16(&quot;product:2001&quot;)&nbsp;%&nbsp;16384&nbsp;=&nbsp;3000&nbsp;→&nbsp;Node1<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">当你用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">redis-cli</code> 连上 Cluster 时，客户端会先拿到"槽位映射表"（Cluster slots），知道哪个槽在哪个节点。访问某个 key 时，如果刚好在本节点就直接处理，不在就返回 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">MOVED</code> 重定向，客户端再跳到正确节点。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">关键配置</h3>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;redis.conf（每个节点）</span><br>cluster-enabled&nbsp;yes<br>cluster-config-file&nbsp;nodes-<span style="color:#b5cea8">6379.</span>conf<br>cluster-node-timeout&nbsp;<span style="color:#b5cea8">5000</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">启动节点后，用 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">redis-cli --cluster create</code> 创建集群：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">redis-cli&nbsp;--cluster&nbsp;create&nbsp;\<br>&nbsp;&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.100</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.101</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.102</span>:<span style="color:#b5cea8">6379</span>&nbsp;\<br>&nbsp;&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.103</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.104</span>:<span style="color:#b5cea8">6379</span>&nbsp;<span style="color:#b5cea8">192.168</span>.<span style="color:#b5cea8">1.105</span>:<span style="color:#b5cea8">6379</span>&nbsp;\<br>&nbsp;&nbsp;--cluster-replicas&nbsp;<span style="color:#b5cea8">1</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">前三个是主节点，后三个是每个主节点的从节点。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">注意事项</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">不支持多 key 操作</strong>（除非这些 key 在同一个槽，用 hash tag）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">事务有限制</strong>：只能在同一个节点的事务</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">客户端需要 Cluster 支持</strong>：JedisCluster、Lettuce、Redisson 都支持</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">完整对比表</h2>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">维度</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">主从复制</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">哨兵模式</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">Cluster</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">数据分片</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">否（全量数据）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">否（全量数据）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">是</strong>（16384 槽）</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高可用</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌ 手动切换</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 自动故障转移</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅ 自动故障转移</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">写性能</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">单点写</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">单点写</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">多节点写</strong></td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读性能</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">多从库读</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">多从库读</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">多节点读</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">自动扩缩容</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">❌</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">✅（在线迁移槽）</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">配置复杂度</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐（简单）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐（稍复杂）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐⭐⭐（复杂）</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">客户端要求</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">普通客户端</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">普通客户端</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">需 Cluster 支持</strong></td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">适用场景</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">读多写少、可容忍手动恢复</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高可用、单机内存够用</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">大数据量、需要水平扩展</td>
+</tr>
+</tbody>
+</table>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">生产环境到底怎么选？</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">三种方案不是递进关系，是解决不同问题的。</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">如果面试官问你这个问题，你可以按这个思路回答：</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">数据量 &lt; 10GB，需要高可用 → 选哨兵。</strong><br />
+配置简单，10-15 秒自动切换，运维成本低。大部分中小公司的 Redis 都是这个规模。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">数据量 &gt; 10GB，或者未来会增长到 10GB+ → 选 Cluster。</strong><br />
+单机 32GB 内存存满了 Redis，BGSAVE 的时候 fork 子进程可能把内存翻倍，直接 OOM。Cluster 天然解决了这个问题。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">如果你只想要读写分离，不关心自动切换 → 主从就够了。</strong><br />
+但说实话现在很少用了——哨兵没有额外硬件成本，只是多了几个 Sentinel 进程（几乎不占资源），我实在想不出什么场景应该选裸主从而不是哨兵。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">扩展 &amp; 进阶方向</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis 7.0 的 Redis Functions</strong>：可以替代 Lua 脚本，在集群场景下更友好</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">阿里云 Redis 的 Proxy 模式</strong>：对客户端透明，底层自动分片，适合不想改客户端代码的场景</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis Cluster 的 resharding</strong>：在线迁移槽，但会影响性能，建议低峰期操作</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">参考资料</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis Cluster Tutorial<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[1]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis Sentinel Documentation<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[2]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis Replication<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[3]</sup></span></section></section>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px">
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">📌 本文是「面向面试之 Redis」系列第 5 篇<br />
+• 上一篇：Redis 系列四：Redis 持久化——RDB vs AOF，生产环境到底怎么选<br />
+• 下一篇：Redis 系列六：Redis 内存淘汰策略与 LRU 算法实现原理（待发布）</p></section>
+<section style="margin-top:32px;padding-top:16px;border-top:1px solid #d5cfc5">
+<p style="font-size:14px;font-weight:bold;color:#999999;margin-bottom:12px" data-darkmode-color="#888888">参考链接</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[1] Redis Cluster Tutorial: https://redis.io/docs/management/scaling/</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[2] Redis Sentinel Documentation: https://redis.io/docs/management/sentinel/</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[3] Redis Replication: https://redis.io/docs/management/replication/</p>
+</section>
+</div>
+
+<script>
+function switchFontSize(size) {
+    // 更新按钮状态
+    document.querySelectorAll('.fs-btn').forEach(function(btn) {
+        if (parseInt(btn.dataset.size) === size) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 修改可见预览区和隐藏复制区的 p 标签
+    ['articleContent', 'wechatHtml'].forEach(function(id) {
+        var container = document.getElementById(id);
+        if (!container) return;
+        container.querySelectorAll('p').forEach(function(p) {
+            var currentSize = parseInt(window.getComputedStyle(p).fontSize);
+            if (currentSize >= 14 && currentSize <= 16) {
+                p.style.fontSize = size + 'px';
+                p.style.lineHeight = size === 16 ? '1.75' : '1.8';
+            }
+        });
+        // 修改列表项文字
+        container.querySelectorAll('[style*="font-size:15px"]').forEach(function(el) {
+            if (el.tagName === 'SPAN' || el.tagName === 'SECTION') {
+                el.style.fontSize = size + 'px';
+            }
+        });
+    });
+
+    // 保存选择到 localStorage
+    localStorage.setItem('wechat-format-fontsize', size);
+}
+
+// 页面加载时恢复上次选择
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('wechat-format-fontsize');
+    if (saved && saved !== '15') {
+        switchFontSize(parseInt(saved));
+    }
+});
+
+function copyToWechat() {
+    const source = document.getElementById('wechatHtml');
+    const range = document.createRange();
+    range.selectNodeContents(source);
+
+    // 临时让元素可见（否则某些浏览器不允许复制隐藏元素）
+    source.style.position = 'fixed';
+    source.style.left = '0';
+    source.style.top = '0';
+    source.style.opacity = '0.01';
+    source.style.width = '375px';
+    source.style.visibility = 'visible';
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '已复制!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '复制到微信';
+            btn.classList.remove('copied');
+        }, 2500);
+    } catch(e) {
+        // fallback: 尝试 Clipboard API
+        const html = source.innerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制到微信';
+                btn.classList.remove('copied');
+            }, 2500);
+        }).catch(() => {
+            alert('复制失败，请手动选中文章内容复制');
+        });
+    }
+
+    // 恢复隐藏
+    source.style.position = 'absolute';
+    source.style.left = '-9999px';
+    source.style.top = '-9999px';
+    source.style.opacity = '';
+    source.style.width = '';
+    source.style.visibility = 'hidden';
+
+    sel.removeAllRanges();
+}
+</script>
+</body>
+</html>
