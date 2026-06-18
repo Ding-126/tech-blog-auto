@@ -10,6 +10,19 @@
 **Homepage**: ⚠️ timeout (Vercel cold start), git push triggered auto-deploy
 **Distribution**: WeChat / Zhihu / Toutiao formats generated
 
+## 2026-06-18 18:37 (Cron: daily-hot-take)
+
+**Status**: ✅ Published
+**Post**: content/posts/anthropic-claude-china-restriction-impact.md
+**Title**: Anthropic 限制中国使用 Claude：别骂了，这3件事现在就得动手
+**Source**: juejin (score 4156 — "Anthropic 为何限制中国大陆使用 Claude？")
+**Commit**: 8d946c2
+**Homepage**: ⚠️ timeout (Vercel cold start), git push triggered auto-deploy
+**Cover**: ✅ 24KB cover generated
+**WeChat Preview**: ✅ article.html + preview.html (newspaper theme)
+**WeChat Draft**: ⚠️ skipped (no API credentials configured)
+**Distribution**: WeChat / Zhihu / Toutiao formats generated
+
 ## 2026-06-15 18:03 (Cron: daily-hot-take)
 
 **Status**: ✅ Published
