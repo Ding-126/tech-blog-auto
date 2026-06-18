@@ -64,5 +64,11 @@
     "title": "Anthropic 限制中国使用 Claude：别骂了，这3件事现在就得动手",
     "post": "content/posts/anthropic-claude-china-restriction-impact.md",
     "published_at": "2026-06-18T18:47:44.868627+08:00"
+  },
+  {
+    "url": "https://blog.dudu.dev/posts/cpu-100-arthas-troubleshoot",
+    "title": "线上问题排查系列一：CPU 100% 了怎么办？一次 Arthas 定位实战",
+    "post": "content/posts/cpu-100-arthas-troubleshoot.md",
+    "published_at": "2026-06-19T07:26:44.311478+08:00"
   }
 ]
