@@ -146,15 +146,15 @@ python3 << PYEOF > /tmp/${SLUG}-cover-args.txt
 import re, sys
 with open('$FILE', encoding='utf-8') as f:
     text = f.read()
-title_m = re.search(r"title\s*=\s*'([^']+)'", text)
+title_m = re.search(r'title\s*=\s*[\'"]([^\'"]+)[\'"]', text)
 title = title_m.group(1) if title_m else '$SLUG'
 parts = re.split(r'[———]', title, maxsplit=2)
 line1 = parts[0].strip() if len(parts) > 0 else title
 line2 = parts[1].strip() if len(parts) > 1 else ''
 line3 = parts[2].strip() if len(parts) > 2 else ''
-print(f'line1={line1}')
-print(f'line2={line2}')
-print(f'line3={line3}')
+print(f"line1='{line1}'")
+print(f"line2='{line2}'")
+print(f"line3='{line3}'")
 PYEOF
 source /tmp/${SLUG}-cover-args.txt
 python3 /Users/dudu/.hermes/skills/productivity/tech-blog-auto/scripts/cover-generate.py \

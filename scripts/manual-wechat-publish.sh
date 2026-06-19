@@ -13,7 +13,12 @@ if [ ! -f "$FILE" ]; then
 fi
 
 SLUG="$(basename "$FILE" .md)"
-TITLE=$(grep '^title\s*=' "$FILE" | head -1 | sed "s/.*= *'//; s/'$//")
+TITLE=$(python3 -c "
+import re
+text = open('$FILE', encoding='utf-8').read()
+m = re.search(r'title\s*=\s*[\'\"]([^\'\"]+)[\'\"]', text)
+print(m.group(1) if m else '$SLUG')
+")
 FORMATTER="$HOME/.hermes/skills/xiaohu-wechat-format/scripts/format.py"
 
 OUT_DIR="distribution/wechat/$SLUG"

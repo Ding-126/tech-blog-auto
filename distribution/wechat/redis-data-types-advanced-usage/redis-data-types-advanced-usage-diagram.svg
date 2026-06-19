@@ -51,23 +51,23 @@
   <rect x="80.0" y="100.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8" filter="url(#shadowSoft)"/>
   <text x="170.0" y="138.0" text-anchor="middle" class="node-title">应用服务</text>
   <rect x="400.0" y="100.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8" filter="url(#shadowSoft)"/>
-  <text x="490.0" y="138.0" text-anchor="middle" class="node-title">Redis</text>
+  <text x="490.0" y="138.0" text-anchor="middle" class="node-title">Redis 服务</text>
   <rect x="120.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8" filter="url(#shadowSoft)"/>
-  <text x="210.0" y="348.0" text-anchor="middle" class="node-title">缓存</text>
+  <text x="210.0" y="348.0" text-anchor="middle" class="node-title">缓存热点数据</text>
   <rect x="330.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8" filter="url(#shadowSoft)"/>
   <text x="420.0" y="348.0" text-anchor="middle" class="node-title">分布式锁</text>
   <rect x="550.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8" filter="url(#shadowSoft)"/>
-  <text x="640.0" y="348.0" text-anchor="middle" class="node-title">数据结构</text>
+  <text x="640.0" y="348.0" text-anchor="middle" class="node-title">数据结构操作</text>
   <rect x="780.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8" filter="url(#shadowSoft)"/>
-  <text x="870.0" y="348.0" text-anchor="middle" class="node-title">消息</text>
+  <text x="870.0" y="348.0" text-anchor="middle" class="node-title">消息 Pub/Sub</text>
   <rect x="312.0" y="108.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
   <text x="330.0" y="122.0" text-anchor="middle" class="arrow-label">请求</text>
   <rect x="332.0" y="213.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
   <text x="350.0" y="227.0" text-anchor="middle" class="arrow-label">缓存</text>
   <rect x="437.0" y="213.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="455.0" y="227.0" text-anchor="middle" class="arrow-label">锁</text>
-  <rect x="547.0" y="213.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="565.0" y="227.0" text-anchor="middle" class="arrow-label">操作</text>
-  <rect x="648.5" y="213.0" width="63" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="680.0" y="227.0" text-anchor="middle" class="arrow-label">Pub/Sub</text>
+  <text x="455.0" y="227.0" text-anchor="middle" class="arrow-label">锁操作</text>
+  <rect x="544.0" y="213.0" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="565.0" y="227.0" text-anchor="middle" class="arrow-label">数据操作</text>
+  <rect x="659.0" y="213.0" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="680.0" y="227.0" text-anchor="middle" class="arrow-label">发布订阅</text>
 </svg>
