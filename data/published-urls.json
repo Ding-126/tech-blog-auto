@@ -70,5 +70,11 @@
     "title": "线上问题排查系列一：CPU 100% 了怎么办？一次 Arthas 定位实战",
     "post": "content/posts/cpu-100-arthas-troubleshoot.md",
     "published_at": "2026-06-19T07:26:44.311478+08:00"
+  },
+  {
+    "url": "https://blog.dudu.dev/posts/troubleshoot-2-内存泄漏",
+    "title": "线上问题排查系列二：Java 内存泄漏——从堆转储到源码修复，完整记录",
+    "post": "content/posts/troubleshoot-2-内存泄漏.md",
+    "published_at": "2026-06-19T13:23:13.966238+08:00"
   }
 ]
