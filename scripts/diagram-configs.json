@@ -4,54 +4,54 @@
       "match": {"series": "线上问题排查", "keywords_include": ["CPU", "Arthas"]},
       "template": "architecture",
       "style": 1,
-      "title": "CPU 排查流程",
-      "width": 800,
-      "height": 500,
+      "title": "线上 CPU 排查流程",
+      "width": 960,
+      "height": 560,
       "nodes": [
-        {"id": "alert", "label": "CPU 告警", "x": 320, "y": 40, "w": 160, "h": 50, "shape": "rounded"},
-        {"id": "top", "label": "top -c 进程级", "x": 100, "y": 160, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "thread", "label": "top -Hp 线程级", "x": 310, "y": 160, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "arthas", "label": "Arthas thread", "x": 520, "y": 160, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "trace", "label": "trace 方法耗时", "x": 100, "y": 300, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "root", "label": "定位根因", "x": 310, "y": 300, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "verify", "label": "观察确认", "x": 520, "y": 300, "w": 180, "h": 50, "shape": "rounded"}
+        {"id": "alert", "label": "CPU 告警", "x": 380, "y": 100, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "top", "label": "top -c 进程级", "x": 100, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "thread", "label": "top -Hp 线程级", "x": 380, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "arthas", "label": "Arthas thread", "x": 660, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "trace", "label": "trace 方法耗时", "x": 100, "y": 360, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "root", "label": "定位根因", "x": 380, "y": 360, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "verify", "label": "观察确认", "x": 660, "y": 360, "w": 180, "h": 56, "shape": "rounded"}
       ],
       "arrows": [
         {"source": "alert", "target": "top", "label": ""},
         {"source": "alert", "target": "thread", "label": ""},
         {"source": "alert", "target": "arthas", "label": ""},
-        {"source": "top", "target": "trace", "label": "发现热点"},
-        {"source": "thread", "target": "trace", "label": "定位线程"},
-        {"source": "arthas", "target": "trace", "label": "方法级"},
-        {"source": "trace", "target": "root", "label": "定位"},
-        {"source": "root", "target": "verify", "label": "验证"}
+        {"source": "top", "target": "trace", "label": ""},
+        {"source": "thread", "target": "trace", "label": ""},
+        {"source": "arthas", "target": "trace", "label": ""},
+        {"source": "trace", "target": "root", "label": ""},
+        {"source": "root", "target": "verify", "label": ""}
       ]
     },
     {
       "match": {"series": "线上问题排查", "keywords_include": ["OOM", "MAT", "Heap Dump", "内存泄漏"]},
       "template": "architecture",
       "style": 1,
-      "title": "OOM 排查流程",
-      "width": 800,
-      "height": 500,
+      "title": "线上 OOM 排查流程",
+      "width": 960,
+      "height": 560,
       "nodes": [
-        {"id": "alert", "label": "内存告警 95%", "x": 300, "y": 40, "w": 200, "h": 50, "shape": "rounded"},
-        {"id": "diagnose", "label": "jstat 看GC频率", "x": 80, "y": 170, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "dump", "label": "jmap dump 堆转储", "x": 310, "y": 170, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "mat", "label": "MAT 分析大对象", "x": 540, "y": 170, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "find", "label": "追源码找到泄漏点", "x": 80, "y": 310, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "fix", "label": "Caffeine 缓存限容", "x": 310, "y": 310, "w": 180, "h": 50, "shape": "rounded"},
-        {"id": "verify", "label": "观察老年代稳定", "x": 540, "y": 310, "w": 180, "h": 50, "shape": "rounded"}
+        {"id": "alert", "label": "内存告警 95%", "x": 380, "y": 100, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "diagnose", "label": "jstat 看GC频率", "x": 80, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "dump", "label": "jmap dump 堆", "x": 380, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "mat", "label": "MAT 分析大对象", "x": 680, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "find", "label": "追源码定位泄漏", "x": 80, "y": 360, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "fix", "label": "Caffeine 限容", "x": 380, "y": 360, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "verify", "label": "观察老年代", "x": 680, "y": 360, "w": 180, "h": 56, "shape": "rounded"}
       ],
       "arrows": [
-        {"source": "alert", "target": "diagnose", "label": "排查"},
-        {"source": "alert", "target": "dump", "label": "取证"},
-        {"source": "alert", "target": "mat", "label": "分析"},
-        {"source": "diagnose", "target": "find", "label": "线索"},
-        {"source": "dump", "target": "mat", "label": "数据"},
-        {"source": "mat", "target": "find", "label": "定位"},
-        {"source": "find", "target": "fix", "label": "修复"},
-        {"source": "fix", "target": "verify", "label": "验证"}
+        {"source": "alert", "target": "diagnose", "label": ""},
+        {"source": "alert", "target": "dump", "label": ""},
+        {"source": "alert", "target": "mat", "label": ""},
+        {"source": "diagnose", "target": "find", "label": ""},
+        {"source": "dump", "target": "mat", "label": ""},
+        {"source": "mat", "target": "find", "label": ""},
+        {"source": "find", "target": "fix", "label": ""},
+        {"source": "fix", "target": "verify", "label": ""}
       ]
     },
     {
@@ -62,19 +62,19 @@
       "width": 960,
       "height": 500,
       "nodes": [
-        {"id": "client", "label": "应用服务", "x": 80, "y": 100, "w": 160, "h": 60},
-        {"id": "redis", "label": "Redis 服务", "x": 400, "y": 100, "w": 160, "h": 60},
-        {"id": "cache", "label": "缓存热点数据", "x": 120, "y": 310, "w": 140, "h": 55},
-        {"id": "dist-lock", "label": "分布式锁", "x": 330, "y": 310, "w": 160, "h": 55},
-        {"id": "data-struct", "label": "数据结构操作", "x": 550, "y": 310, "w": 160, "h": 55},
-        {"id": "pubsub", "label": "消息 Pub/Sub", "x": 780, "y": 310, "w": 140, "h": 55}
+        {"id": "client", "label": "应用服务", "x": 80, "y": 120, "w": 160, "h": 56},
+        {"id": "redis", "label": "Redis 服务", "x": 400, "y": 120, "w": 160, "h": 56},
+        {"id": "cache", "label": "缓存热点数据", "x": 120, "y": 310, "w": 140, "h": 50},
+        {"id": "dist-lock", "label": "分布式锁", "x": 330, "y": 310, "w": 160, "h": 50},
+        {"id": "data-struct", "label": "数据结构", "x": 550, "y": 310, "w": 160, "h": 50},
+        {"id": "pubsub", "label": "消息 Pub/Sub", "x": 780, "y": 310, "w": 140, "h": 50}
       ],
       "arrows": [
         {"source": "client", "target": "redis", "label": "请求"},
         {"source": "redis", "target": "cache", "label": "缓存"},
         {"source": "redis", "target": "dist-lock", "label": "锁操作"},
         {"source": "redis", "target": "data-struct", "label": "数据操作"},
-        {"source": "redis", "target": "pubsub", "label": "发布订阅"}
+        {"source": "redis", "target": "pubsub", "label": "发布"}
       ]
     }
   ],

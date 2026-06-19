@@ -114,9 +114,8 @@ def generate_diagram(post_file: str, slug: str):
     os.makedirs(out_dir, exist_ok=True)
     svg_path = os.path.join(out_dir, f"{slug}-diagram.svg")
 
-    # build title from article title
-    article_title = fm.get("title", slug)
-    diagram_title = article_title  # article title already contains series context
+    # build title from config (短标题更清晰)
+    diagram_title = cfg.get("title", "技术架构图")
 
     # build data JSON
     data = {

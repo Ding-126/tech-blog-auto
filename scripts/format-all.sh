@@ -164,6 +164,38 @@ python3 /Users/dudu/.hermes/skills/productivity/tech-blog-auto/scripts/cover-gen
 python3 "$ROOT/scripts/generate-diagram.py" "$FILE" "$SLUG" 2>&1 || \
   echo "  ⚠️ diagram 生成跳过（不影响其他输出）"
 
+# ── Step 7: 嵌入配图到文章 ──
+DIAGRAM_SVG="$ROOT/distribution/wechat/$SLUG/${SLUG}-diagram.svg"
+if [ -f "$DIAGRAM_SVG" ]; then
+  # 转 PNG 用于 WeChat（需要系统 cairo 库，没有就跳过）
+  DIAGRAM_PNG="$ROOT/distribution/wechat/$SLUG/${SLUG}-diagram.png"
+  python3 -c "
+import cairosvg
+import os
+cairosvg.svg2png(url='$DIAGRAM_SVG', write_to='$DIAGRAM_PNG', scale=1.5)
+print('  diagram-png: ' + str(os.path.getsize('\"$DIAGRAM_PNG\"') // 1024) + 'KB')
+" 2>/dev/null || echo "  ⚠️ diagram-png 跳过（安装 brew install cairo 后可启用）"
+
+  # 嵌入配图引用到 .md 末尾（博客站自动显示）
+  python3 << PYEOF
+import os
+body_file = '$BODY_FILE'
+slug = '$SLUG'
+with open(body_file, encoding='utf-8') as f:
+    body = f.read()
+if 'diagram.svg' not in body:
+    ref = f'''
+
+> 💡 **排查流程图**
+
+![排查流程图](/{slug}-diagram.svg)
+'''
+    with open(body_file, 'a', encoding='utf-8') as f:
+        f.write(ref)
+    print('  diagram: 已嵌入到文章末尾')
+PYEOF
+fi
+
 # Cleanup
 rm -f "$BODY_FILE"
 

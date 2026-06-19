@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560">
   <defs>
     <marker id="arrowA" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
@@ -41,44 +41,28 @@
     .footnote { font-size: 12px; font-weight: 500; fill: #94a3b8; }
     </style>
   </defs>
-  <rect width="800.0" height="500.0" fill="#ffffff"/>
-  <text x="400.0" y="56" text-anchor="middle" class="title">线上问题排查系列二：Java 内存泄漏——从堆转储到源码修复，完整记录</text>
-  <path d="M 390.0,116.0 L 170.0,170.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 390.0,116.0 L 400.0,170.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 390.0,116.0 L 630.0,170.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 170.0,246.0 L 170.0,310.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 490.0,208.0 L 540.0,208.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 540.0,208.0 L 260.0,348.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 260.0,348.0 L 310.0,348.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <path d="M 490.0,348.0 L 540.0,348.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
-  <rect x="300.0" y="40.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="390.0" y="78.0" text-anchor="middle" class="node-title">内存告警 95%</text>
-  <rect x="80.0" y="170.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="170.0" y="208.0" text-anchor="middle" class="node-title">jstat 看GC频率</text>
-  <rect x="310.0" y="170.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="400.0" y="208.0" text-anchor="middle" class="node-title">jmap dump 堆转储</text>
-  <rect x="540.0" y="170.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="630.0" y="208.0" text-anchor="middle" class="node-title">MAT 分析大对象</text>
-  <rect x="80.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="170.0" y="348.0" text-anchor="middle" class="node-title">追源码找到泄漏点</text>
-  <rect x="310.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="400.0" y="348.0" text-anchor="middle" class="node-title">Caffeine 缓存限容</text>
-  <rect x="540.0" y="310.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
-  <text x="630.0" y="348.0" text-anchor="middle" class="node-title">观察老年代稳定</text>
-  <rect x="262.0" y="129.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="280.0" y="143.0" text-anchor="middle" class="arrow-label">排查</text>
-  <rect x="377.0" y="129.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="395.0" y="143.0" text-anchor="middle" class="arrow-label">取证</text>
-  <rect x="492.0" y="113.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="510.0" y="127.0" text-anchor="middle" class="arrow-label">分析</text>
-  <rect x="134.0" y="264.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="152.0" y="278.0" text-anchor="middle" class="arrow-label">线索</text>
-  <rect x="497.0" y="178.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="515.0" y="192.0" text-anchor="middle" class="arrow-label">数据</text>
-  <rect x="382.0" y="248.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="400.0" y="262.0" text-anchor="middle" class="arrow-label">定位</text>
-  <rect x="267.0" y="318.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="285.0" y="332.0" text-anchor="middle" class="arrow-label">修复</text>
-  <rect x="497.0" y="318.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
-  <text x="515.0" y="332.0" text-anchor="middle" class="arrow-label">验证</text>
+  <rect width="960.0" height="560.0" fill="#ffffff"/>
+  <text x="480.0" y="56" text-anchor="middle" class="title">线上 OOM 排查流程</text>
+  <path d="M 380.0,138.0 L 260.0,258.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 470.0,176.0 L 470.0,220.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 560.0,138.0 L 680.0,258.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 170.0,296.0 L 170.0,360.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 560.0,258.0 L 680.0,258.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 680.0,258.0 L 260.0,398.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 260.0,398.0 L 380.0,398.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 560.0,398.0 L 680.0,398.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <rect x="380.0" y="100.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="470.0" y="138.0" text-anchor="middle" class="node-title">内存告警 95%</text>
+  <rect x="80.0" y="220.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="170.0" y="258.0" text-anchor="middle" class="node-title">jstat 看GC频率</text>
+  <rect x="380.0" y="220.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="470.0" y="258.0" text-anchor="middle" class="node-title">jmap dump 堆</text>
+  <rect x="680.0" y="220.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="770.0" y="258.0" text-anchor="middle" class="node-title">MAT 分析大对象</text>
+  <rect x="80.0" y="360.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="170.0" y="398.0" text-anchor="middle" class="node-title">追源码定位泄漏</text>
+  <rect x="380.0" y="360.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="470.0" y="398.0" text-anchor="middle" class="node-title">Caffeine 限容</text>
+  <rect x="680.0" y="360.0" width="180.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="770.0" y="398.0" text-anchor="middle" class="node-title">观察老年代</text>
 </svg>
