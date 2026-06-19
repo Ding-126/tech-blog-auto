@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>canal.properties - 微信排版预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+}
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.toolbar-info {
+    font-size: 13px;
+    color: #666;
+}
+.toolbar-info span {
+    margin-right: 12px;
+}
+.toolbar-info .theme-name {
+    background: #f5f5f5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+}
+.copy-btn {
+    padding: 10px 24px;
+    background: #07c160;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.copy-btn:hover { background: #06ae56; transform: translateY(-1px); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied {
+    background: #34c759;
+}
+.phone-frame {
+    max-width: 415px;
+    margin: 76px auto 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.phone-header {
+    background: #ededed;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 1px solid #e0e0e0;
+}
+.article-content {
+    padding: 20px;
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 隐藏的纯微信 HTML，用于复制 */
+#wechatHtml {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 375px;          /* 限宽，避免子 section 撑到视口右边漏出色块 */
+    overflow: hidden;
+    visibility: hidden;    /* 复制时 JS 会临时恢复 visibility */
+    pointer-events: none;
+}
+/* ── Font Size Selector ── */
+.font-size-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px auto;
+    padding: 8px 0;
+    max-width: 415px;
+}
+.fs-label {
+    font-size: 13px;
+    color: #999;
+}
+.fs-btn {
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.fs-btn:hover {
+    border-color: #07C160;
+    color: #07C160;
+}
+.fs-btn.active {
+    background: #07C160;
+    border-color: #07C160;
+    color: #fff;
+}
+@media (max-width: 480px) {
+    .phone-frame {
+        margin: 60px 0 20px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toolbar {
+        padding: 8px 12px;
+    }
+    .copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <div class="toolbar-info">
+            <span class="theme-name">报纸</span>
+            <span>2,197 字</span>
+        </div>
+    </div>
+    <button class="copy-btn" onclick="copyToWechat()">复制到微信</button>
+</div>
+
+<div class="font-size-selector">
+    <span class="fs-label">字号</span>
+    <button class="fs-btn active" data-size="15" onclick="switchFontSize(15)">15px</button>
+    <button class="fs-btn" data-size="16" onclick="switchFontSize(16)">16px</button>
+</div>
+
+<div class="phone-frame">
+    <div class="phone-header">微信公众号预览</div>
+    <div class="article-content" id="articleContent">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">开头</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">说实话，我第一次遇到缓存和数据库数据不一致的时候，整个人是懵的。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">用户修改了自己的昵称，数据库里已经更新了，但页面刷新了好几次还是旧的。查了半天发现是缓存没更新，手动清了 Redis 的 key 才恢复。领导问我"为什么会出现这种问题"，我支支吾吾说"缓存更新顺序有问题"——其实当时自己都没搞明白。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">后来深入研究才发现，<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">缓存和数据库之间从来就没有天然的一致性</strong>。不管你怎么设计，只要同时读写一个数据，就可能有时间差导致不一致。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">今天这篇把缓存与数据库一致性的 4 种常见方案从头到尾讲透，从最简单的到最可靠的，每个方案的坑和适用场景都说清楚。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">核心结论先行</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Cache Aside Pattern</strong>：最通用方案，读的时候先查缓存再查 DB，写的时候先更新 DB 再删缓存</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">延迟双删</strong>：在 Cache Aside 基础上加一个延迟删除，降低并发写时的不一致概率</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">消息队列最终一致性</strong>：写 DB → 发消息 → 消费消息删缓存，引入重试机制确保最终一致</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Canal + Binlog</strong>：最可靠方案，监听 MySQL Binlog 变更，异步同步到 Redis，对业务代码零侵入</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">为什么缓存和数据库会不一致？</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">先搞清楚问题本质。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">正常流程应该是这样的：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">用户修改昵称&nbsp;→&nbsp;更新数据库&nbsp;→&nbsp;更新或删除缓存&nbsp;→&nbsp;下次读取时缓存刷新<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">但只要涉及两个存储系统，就一定有时间窗口：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">线程A：更新&nbsp;DB&nbsp;→&nbsp;（还没来得及删缓存）<br>线程B：读缓存&nbsp;→&nbsp;读到旧数据<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这就是不一致。时间窗口再短，只要存在就有可能触发。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">常见的有三种场景：</p>
+<table style="width:100%;border-collapse:separate;font-size: 16px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">场景</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">现象</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">发生频率</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">先删缓存再更新 DB</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">另一个线程读到旧数据写进缓存，彻底不一致</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">先更新 DB 再删缓存</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">删缓存失败，数据永久不一致</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中</td>
+</tr>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">先更新 DB 再更新缓存</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">并发写时缓存被旧值覆盖</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+</tr>
+</tbody>
+</table>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">其中<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">最经典也最容易踩的坑是"先删缓存再更新 DB"</strong>。我第一次做缓存更新时就掉进去了。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案一：Cache Aside Pattern（最通用）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">读：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;先查缓存</span><br><span style="color:#4ec9b0">String</span>&nbsp;value&nbsp;=&nbsp;redis.get(key);<br><span style="color:#569cd6">if</span>&nbsp;(value&nbsp;!=&nbsp;<span style="color:#569cd6">null</span>)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">return</span>&nbsp;value;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;缓存命中，直接返回</span><br>}<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;缓存没命中，查数据库</span><br>value&nbsp;=&nbsp;db.query(key);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">3.</span>&nbsp;写回缓存</span><br>redis.<span style="color:#4ec9b0">set</span>(key,&nbsp;value);<br><span style="color:#569cd6">return</span>&nbsp;value;<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">写：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;更新数据库</span><br>db.update(data);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;删除缓存（不是更新缓存）</span><br>redis.<span style="color:#569cd6">del</span>(key);<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">为什么是删缓存而不是更新缓存？</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这就是关键所在。如果你更新缓存：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">线程A：更新&nbsp;DB&nbsp;→&nbsp;更新缓存为值A<br>线程B：更早的请求，更新缓存为值B（比A晚执行，把A覆盖了）<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">结果缓存里是旧值 B，DB 里是新值 A——不一致了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">删缓存的话，下次读取时缓存 MISS，自然会去 DB 拿最新的值。</strong></p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">有什么问题</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Cache Aside 在单线程场景下完全没问题。但在高并发下：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">线程A：更新&nbsp;DB&nbsp;→&nbsp;删缓存（删得慢）<br>线程B：读&nbsp;MISS&nbsp;→&nbsp;从&nbsp;DB&nbsp;读旧数据&nbsp;→&nbsp;写回缓存<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">线程B 把旧数据写进了缓存，之后一直读到旧的。这个时间窗口很短，但有。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案二：延迟双删（Delayed Double Delete）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在 Cache Aside 的基础上，删完缓存后等几百毫秒再删一次：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;更新数据库</span><br>db.update(data);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;第一次删缓存</span><br>redis.<span style="color:#569cd6">del</span>(key);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">3.</span>&nbsp;等待一段时间（<span style="color:#b5cea8">500</span>ms-<span style="color:#b5cea8">1</span>s）</span><br>Thread.sleep(<span style="color:#b5cea8">500</span>);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">4.</span>&nbsp;第二次删缓存</span><br>redis.<span style="color:#569cd6">del</span>(key);<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">第二次删除覆盖了那个"读 MISS 写回旧缓存"的时间窗口。500ms 的延迟足够让绝大多数并发读操作完成。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">适用场景</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">并发量不是特别大（QPS &lt; 5000）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">可以容忍短暂的不一致（500ms 内读到旧数据）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">不希望引入额外的组件（消息队列、Canal）</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">之前我参与的一个电商项目用的就是延迟双删。用户修改收货地址后，大约 300ms 内可能看到旧地址，之后就对了。产品经理说 300ms 可以接受。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">这个方案的坑</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">延迟时间要选对。太短覆盖不了并发窗口，太长影响体验。一般 500ms-1s 比较合理</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">如果第二次删除失败了，还是会不一致——所以最好配合重试机制</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">这不是强一致方案，是最终一致</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案三：消息队列最终一致性</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">把"删缓存"这个动作从同步变成异步，通过消息队列保证一定会执行：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;写流程</span><br>public&nbsp;<span style="color:#569cd6">void</span>&nbsp;updateData(data)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;更新数据库</span><br>&nbsp;&nbsp;&nbsp;&nbsp;db.update(data);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;发消息到&nbsp;MQ（包含需要删除的&nbsp;key）</span><br>&nbsp;&nbsp;&nbsp;&nbsp;mq.send(<span style="color:#569cd6">new</span>&nbsp;CacheDeleteMessage(key));<br>}<br><br><span style="color:#6a9955">//&nbsp;消费者</span><br><span style="color:#c586c0">@RabbitListener</span>(queues&nbsp;=&nbsp;<span style="color:#ce9178">&quot;cache-delete&quot;</span>)<br>public&nbsp;<span style="color:#569cd6">void</span>&nbsp;handleCacheDelete(CacheDeleteMessage&nbsp;msg)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">try</span>&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;redis.<span style="color:#569cd6">del</span>(msg.getKey());<br>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span style="color:#569cd6">catch</span>&nbsp;(Exception&nbsp;e)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;删除失败，重新投递消息（MQ&nbsp;自带重试）</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">throw</span>&nbsp;<span style="color:#569cd6">new</span>&nbsp;AmqpRejectAndDontRequeueException(e);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">好处</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">重试机制：MQ 自带重试，不像方案二删失败了就失败</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">解耦合：写 DB 和删缓存不在同一个事务里，不会因为 Redis 超时拖慢 DB 操作</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">可追踪：消息记录了每次删除的日志，出问题能回溯</span></section></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">不足</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">引入了 MQ，架构复杂度增加</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">消息可能有延迟（几十毫秒到几秒不等）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">极端情况下消息积压，不一致时间会拉长</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案四：Canal + Binlog（最可靠，零侵入）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这是目前生产环境我见过最可靠的方案。原理很简单：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">MySQL 主库的 Binlog 记录了所有数据变更</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Canal 伪装成 MySQL 从库，实时读取 Binlog</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">3</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Canal 将变更推送到 MQ 或直接调用删除缓存的接口</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">4</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">业务代码完全不需要处理缓存——只要写 DB 就行</span></section></section>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">业务代码&nbsp;→&nbsp;更新&nbsp;DB<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MySQL&nbsp;Binlog<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Canal&nbsp;监听<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MQ&nbsp;/&nbsp;HTTP&nbsp;回调<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;删除&nbsp;Redis&nbsp;缓存<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">代码层面</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">业务代码只需要正常写数据库：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;业务代码完全不用管缓存</span><br>public&nbsp;<span style="color:#569cd6">void</span>&nbsp;updateNickname(Long&nbsp;userId,&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;newName)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;userMapper.updateNickname(userId,&nbsp;newName);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;缓存的事？不用管，Canal&nbsp;会处理</span><br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Canal 配置：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;canal.properties</span><br>canal.destinations&nbsp;=&nbsp;example<br>example.mysql.host&nbsp;=&nbsp;<span style="color:#b5cea8">127.0</span>.<span style="color:#b5cea8">0.1</span><br>example.mysql.port&nbsp;=&nbsp;<span style="color:#b5cea8">3306</span><br>example.mysql.username&nbsp;=&nbsp;canal<br>example.mysql.password&nbsp;=&nbsp;canal<br>example.mysql.slaveId&nbsp;=&nbsp;<span style="color:#b5cea8">1234</span><br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">优势</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">零业务侵入</strong>：已有的代码不需要任何修改</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">最可靠</strong>：Binlog 是 MySQL 原生机制，不会丢数据</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">异步解耦</strong>：不影响主流程性能</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">支持所有变更</strong>：不只是代码层面的更新，手动修改数据库、数据迁移等操作也能感知</span></section></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">不足</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">部署运维成本高（需要 Canal 服务端 + 客户端）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">数据变更到缓存更新有秒级延迟</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">增加了系统组件，出了问题排查链路变长</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我之前在一个用户量比较大的社交平台用过 Canal 方案。线上跑了一年多没出过缓存不一致的问题。Binlog 监听 + 重试机制，基本做到了最终一致性 99.99%。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">完整对比</h2>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">方案</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">一致性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">复杂度</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">侵入性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Cache Aside</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">弱一致（低并发下够用）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐ 极低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">大多数项目默认选择</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">延迟双删</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">最终一致（~500ms）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐ 低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中小项目，能容忍短暂不一致</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">MQ 最终一致</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">最终一致（~1s）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐⭐ 中</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">需要重试保障的场景</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Canal + Binlog</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">最终一致（~1-3s）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐⭐⭐ 高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">无</strong></td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">大型项目、高一致性要求</td>
+</tr>
+</tbody>
+</table>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">效果验证</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">分享一个我验证不一致方案的测试脚本思路：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;开两个线程</span><br>ExecutorService&nbsp;pool&nbsp;=&nbsp;Executors.newFixedThreadPool(<span style="color:#b5cea8">2</span>);<br><br><span style="color:#6a9955">//&nbsp;线程<span style="color:#b5cea8">1</span>：不断地更新数据</span><br>pool.submit(()&nbsp;-&gt;&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">for</span>&nbsp;(<span style="color:#4ec9b0">int</span>&nbsp;i&nbsp;=&nbsp;<span style="color:#b5cea8">0</span>;&nbsp;i&nbsp;&lt;&nbsp;<span style="color:#b5cea8">1000</span>;&nbsp;i++)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db.update(<span style="color:#ce9178">&quot;key&quot;</span>,&nbsp;i);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>});<br><br><span style="color:#6a9955">//&nbsp;线程<span style="color:#b5cea8">2</span>：不断地读缓存</span><br>pool.submit(()&nbsp;-&gt;&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">for</span>&nbsp;(<span style="color:#4ec9b0">int</span>&nbsp;i&nbsp;=&nbsp;<span style="color:#b5cea8">0</span>;&nbsp;i&nbsp;&lt;&nbsp;<span style="color:#b5cea8">1000</span>;&nbsp;i++)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;cached&nbsp;=&nbsp;redis.get(<span style="color:#ce9178">&quot;key&quot;</span>);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;dbVal&nbsp;=&nbsp;db.query(<span style="color:#ce9178">&quot;key&quot;</span>);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">if</span>&nbsp;(!cached.equals(dbVal))&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;System.out.println(<span style="color:#ce9178">&quot;不一致！缓存=&quot;</span>&nbsp;+&nbsp;cached&nbsp;+&nbsp;<span style="color:#ce9178">&quot;&nbsp;DB=&quot;</span>&nbsp;+&nbsp;dbVal);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>});<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">用这个脚本跑不同方案，你就能直观看到不一致的频次和时间窗口。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">扩展 &amp; 进阶方向</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">读写锁 + 缓存</strong>：强一致性方案（性能换一致性），适合金额类场景</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis 分布式锁 + 双删</strong>：在延迟双删上加锁，进一步缩小时间窗口</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Canal + 自定义注解</strong>：通过注解指定缓存 key 规则，让 Canal 客户端自动拼 key 删缓存</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">参考资料</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Canal 官方文档<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[1]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis 事务与管道<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[2]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Cache Aside Pattern (Martin Fowler)<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[3]</sup></span></section></section>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px">
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">📌 本文是「面向面试之 Redis」系列第 7 篇（番外）<br />
+• 上一篇：Redis 系列六：Redis 内存淘汰策略与 LRU 算法实现原理<br />
+• 下一篇：Redis 系列八（番外）：大 Key 排查与性能调优——线上实战记录（待发布）</p></section>
+<section style="margin-top:32px;padding-top:16px;border-top:1px solid #d5cfc5">
+<p style="font-size:14px;font-weight:bold;color:#999999;margin-bottom:12px" data-darkmode-color="#888888">参考链接</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[1] Canal 官方文档: https://github.com/alibaba/canal</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[2] Redis 事务与管道: https://redis.io/docs/manual/transactions/</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[3] Cache Aside Pattern (Martin Fowler): https://martinfowler.com/bliki/CacheAside.html</p>
+</section>
+    </div>
+</div>
+
+<!-- 隐藏区域：存放纯微信 HTML（不含预览壳样式），复制时用这个 -->
+<div id="wechatHtml">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">开头</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">说实话，我第一次遇到缓存和数据库数据不一致的时候，整个人是懵的。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">用户修改了自己的昵称，数据库里已经更新了，但页面刷新了好几次还是旧的。查了半天发现是缓存没更新，手动清了 Redis 的 key 才恢复。领导问我"为什么会出现这种问题"，我支支吾吾说"缓存更新顺序有问题"——其实当时自己都没搞明白。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">后来深入研究才发现，<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">缓存和数据库之间从来就没有天然的一致性</strong>。不管你怎么设计，只要同时读写一个数据，就可能有时间差导致不一致。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">今天这篇把缓存与数据库一致性的 4 种常见方案从头到尾讲透，从最简单的到最可靠的，每个方案的坑和适用场景都说清楚。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">核心结论先行</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Cache Aside Pattern</strong>：最通用方案，读的时候先查缓存再查 DB，写的时候先更新 DB 再删缓存</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">延迟双删</strong>：在 Cache Aside 基础上加一个延迟删除，降低并发写时的不一致概率</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">消息队列最终一致性</strong>：写 DB → 发消息 → 消费消息删缓存，引入重试机制确保最终一致</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Canal + Binlog</strong>：最可靠方案，监听 MySQL Binlog 变更，异步同步到 Redis，对业务代码零侵入</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">为什么缓存和数据库会不一致？</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">先搞清楚问题本质。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">正常流程应该是这样的：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">用户修改昵称&nbsp;→&nbsp;更新数据库&nbsp;→&nbsp;更新或删除缓存&nbsp;→&nbsp;下次读取时缓存刷新<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">但只要涉及两个存储系统，就一定有时间窗口：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">线程A：更新&nbsp;DB&nbsp;→&nbsp;（还没来得及删缓存）<br>线程B：读缓存&nbsp;→&nbsp;读到旧数据<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这就是不一致。时间窗口再短，只要存在就有可能触发。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">常见的有三种场景：</p>
+<table style="width:100%;border-collapse:separate;font-size: 16px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">场景</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">现象</th>
+<th style="background:#f0ede8;padding:12px 16px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">发生频率</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">先删缓存再更新 DB</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">另一个线程读到旧数据写进缓存，彻底不一致</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">先更新 DB 再删缓存</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">删缓存失败，数据永久不一致</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中</td>
+</tr>
+<tr style="">
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">先更新 DB 再更新缓存</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">并发写时缓存被旧值覆盖</td>
+<td style="padding:12px 16px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">高</td>
+</tr>
+</tbody>
+</table>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">其中<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">最经典也最容易踩的坑是"先删缓存再更新 DB"</strong>。我第一次做缓存更新时就掉进去了。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案一：Cache Aside Pattern（最通用）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">读：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;先查缓存</span><br><span style="color:#4ec9b0">String</span>&nbsp;value&nbsp;=&nbsp;redis.get(key);<br><span style="color:#569cd6">if</span>&nbsp;(value&nbsp;!=&nbsp;<span style="color:#569cd6">null</span>)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">return</span>&nbsp;value;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;缓存命中，直接返回</span><br>}<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;缓存没命中，查数据库</span><br>value&nbsp;=&nbsp;db.query(key);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">3.</span>&nbsp;写回缓存</span><br>redis.<span style="color:#4ec9b0">set</span>(key,&nbsp;value);<br><span style="color:#569cd6">return</span>&nbsp;value;<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">写：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;更新数据库</span><br>db.update(data);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;删除缓存（不是更新缓存）</span><br>redis.<span style="color:#569cd6">del</span>(key);<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">为什么是删缓存而不是更新缓存？</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这就是关键所在。如果你更新缓存：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">线程A：更新&nbsp;DB&nbsp;→&nbsp;更新缓存为值A<br>线程B：更早的请求，更新缓存为值B（比A晚执行，把A覆盖了）<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">结果缓存里是旧值 B，DB 里是新值 A——不一致了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">删缓存的话，下次读取时缓存 MISS，自然会去 DB 拿最新的值。</strong></p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">有什么问题</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Cache Aside 在单线程场景下完全没问题。但在高并发下：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">线程A：更新&nbsp;DB&nbsp;→&nbsp;删缓存（删得慢）<br>线程B：读&nbsp;MISS&nbsp;→&nbsp;从&nbsp;DB&nbsp;读旧数据&nbsp;→&nbsp;写回缓存<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">线程B 把旧数据写进了缓存，之后一直读到旧的。这个时间窗口很短，但有。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案二：延迟双删（Delayed Double Delete）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在 Cache Aside 的基础上，删完缓存后等几百毫秒再删一次：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;更新数据库</span><br>db.update(data);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;第一次删缓存</span><br>redis.<span style="color:#569cd6">del</span>(key);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">3.</span>&nbsp;等待一段时间（<span style="color:#b5cea8">500</span>ms-<span style="color:#b5cea8">1</span>s）</span><br>Thread.sleep(<span style="color:#b5cea8">500</span>);<br><span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">4.</span>&nbsp;第二次删缓存</span><br>redis.<span style="color:#569cd6">del</span>(key);<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">原理</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">第二次删除覆盖了那个"读 MISS 写回旧缓存"的时间窗口。500ms 的延迟足够让绝大多数并发读操作完成。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">适用场景</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">并发量不是特别大（QPS &lt; 5000）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">可以容忍短暂的不一致（500ms 内读到旧数据）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">不希望引入额外的组件（消息队列、Canal）</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">之前我参与的一个电商项目用的就是延迟双删。用户修改收货地址后，大约 300ms 内可能看到旧地址，之后就对了。产品经理说 300ms 可以接受。</p>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">这个方案的坑</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">延迟时间要选对。太短覆盖不了并发窗口，太长影响体验。一般 500ms-1s 比较合理</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">如果第二次删除失败了，还是会不一致——所以最好配合重试机制</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">这不是强一致方案，是最终一致</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案三：消息队列最终一致性</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">把"删缓存"这个动作从同步变成异步，通过消息队列保证一定会执行：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;写流程</span><br>public&nbsp;<span style="color:#569cd6">void</span>&nbsp;updateData(data)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">1.</span>&nbsp;更新数据库</span><br>&nbsp;&nbsp;&nbsp;&nbsp;db.update(data);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;<span style="color:#b5cea8">2.</span>&nbsp;发消息到&nbsp;MQ（包含需要删除的&nbsp;key）</span><br>&nbsp;&nbsp;&nbsp;&nbsp;mq.send(<span style="color:#569cd6">new</span>&nbsp;CacheDeleteMessage(key));<br>}<br><br><span style="color:#6a9955">//&nbsp;消费者</span><br><span style="color:#c586c0">@RabbitListener</span>(queues&nbsp;=&nbsp;<span style="color:#ce9178">&quot;cache-delete&quot;</span>)<br>public&nbsp;<span style="color:#569cd6">void</span>&nbsp;handleCacheDelete(CacheDeleteMessage&nbsp;msg)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">try</span>&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;redis.<span style="color:#569cd6">del</span>(msg.getKey());<br>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span style="color:#569cd6">catch</span>&nbsp;(Exception&nbsp;e)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;删除失败，重新投递消息（MQ&nbsp;自带重试）</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">throw</span>&nbsp;<span style="color:#569cd6">new</span>&nbsp;AmqpRejectAndDontRequeueException(e);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">好处</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">重试机制：MQ 自带重试，不像方案二删失败了就失败</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">解耦合：写 DB 和删缓存不在同一个事务里，不会因为 Redis 超时拖慢 DB 操作</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">可追踪：消息记录了每次删除的日志，出问题能回溯</span></section></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">不足</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">引入了 MQ，架构复杂度增加</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">消息可能有延迟（几十毫秒到几秒不等）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">极端情况下消息积压，不一致时间会拉长</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">方案四：Canal + Binlog（最可靠，零侵入）</h2>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">怎么做的</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这是目前生产环境我见过最可靠的方案。原理很简单：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">MySQL 主库的 Binlog 记录了所有数据变更</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Canal 伪装成 MySQL 从库，实时读取 Binlog</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">3</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Canal 将变更推送到 MQ 或直接调用删除缓存的接口</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">4</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">业务代码完全不需要处理缓存——只要写 DB 就行</span></section></section>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">业务代码&nbsp;→&nbsp;更新&nbsp;DB<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MySQL&nbsp;Binlog<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Canal&nbsp;监听<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MQ&nbsp;/&nbsp;HTTP&nbsp;回调<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;删除&nbsp;Redis&nbsp;缓存<br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">代码层面</h3>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">业务代码只需要正常写数据库：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;业务代码完全不用管缓存</span><br>public&nbsp;<span style="color:#569cd6">void</span>&nbsp;updateNickname(Long&nbsp;userId,&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;newName)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;userMapper.updateNickname(userId,&nbsp;newName);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;缓存的事？不用管，Canal&nbsp;会处理</span><br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Canal 配置：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;canal.properties</span><br>canal.destinations&nbsp;=&nbsp;example<br>example.mysql.host&nbsp;=&nbsp;<span style="color:#b5cea8">127.0</span>.<span style="color:#b5cea8">0.1</span><br>example.mysql.port&nbsp;=&nbsp;<span style="color:#b5cea8">3306</span><br>example.mysql.username&nbsp;=&nbsp;canal<br>example.mysql.password&nbsp;=&nbsp;canal<br>example.mysql.slaveId&nbsp;=&nbsp;<span style="color:#b5cea8">1234</span><br></code></pre></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">优势</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">零业务侵入</strong>：已有的代码不需要任何修改</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">最可靠</strong>：Binlog 是 MySQL 原生机制，不会丢数据</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">异步解耦</strong>：不影响主流程性能</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">支持所有变更</strong>：不只是代码层面的更新，手动修改数据库、数据迁移等操作也能感知</span></section></section>
+<h3 style="font-size:17px;font-weight:700;color:#111111;line-height:1.45;letter-spacing:0.04em;padding-bottom:6px;margin:28px 0 14px" data-darkmode-color="#d0d0d0">不足</h3>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">部署运维成本高（需要 Canal 服务端 + 客户端）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">数据变更到缓存更新有秒级延迟</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">增加了系统组件，出了问题排查链路变长</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我之前在一个用户量比较大的社交平台用过 Canal 方案。线上跑了一年多没出过缓存不一致的问题。Binlog 监听 + 重试机制，基本做到了最终一致性 99.99%。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">完整对比</h2>
+<table style="width:100%;border-collapse:separate;font-size:13px;border-spacing:0;border-radius:0;overflow:hidden;margin:24px 0 24px;table-layout:fixed">
+<thead>
+<tr>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">方案</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">一致性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">复杂度</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">侵入性</th>
+<th style="background:#f0ede8;padding:6px 4px;border:1px solid #d5cfc5;text-align:left;font-weight:600;color:#000000;word-break:break-word">适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Cache Aside</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">弱一致（低并发下够用）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐ 极低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">大多数项目默认选择</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">延迟双删</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">最终一致（~500ms）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐ 低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">低</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中小项目，能容忍短暂不一致</td>
+</tr>
+<tr style="">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">MQ 最终一致</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">最终一致（~1s）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐⭐ 中</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">中</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">需要重试保障的场景</td>
+</tr>
+<tr style="background:#f9f9f9;">
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">Canal + Binlog</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">最终一致（~1-3s）</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">⭐⭐⭐⭐ 高</td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">无</strong></td>
+<td style="padding:6px 4px;border:1px solid #d5cfc5;color:#000000;word-break:break-word">大型项目、高一致性要求</td>
+</tr>
+</tbody>
+</table>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">效果验证</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">分享一个我验证不一致方案的测试脚本思路：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">//&nbsp;开两个线程</span><br>ExecutorService&nbsp;pool&nbsp;=&nbsp;Executors.newFixedThreadPool(<span style="color:#b5cea8">2</span>);<br><br><span style="color:#6a9955">//&nbsp;线程<span style="color:#b5cea8">1</span>：不断地更新数据</span><br>pool.submit(()&nbsp;-&gt;&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">for</span>&nbsp;(<span style="color:#4ec9b0">int</span>&nbsp;i&nbsp;=&nbsp;<span style="color:#b5cea8">0</span>;&nbsp;i&nbsp;&lt;&nbsp;<span style="color:#b5cea8">1000</span>;&nbsp;i++)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db.update(<span style="color:#ce9178">&quot;key&quot;</span>,&nbsp;i);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>});<br><br><span style="color:#6a9955">//&nbsp;线程<span style="color:#b5cea8">2</span>：不断地读缓存</span><br>pool.submit(()&nbsp;-&gt;&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">for</span>&nbsp;(<span style="color:#4ec9b0">int</span>&nbsp;i&nbsp;=&nbsp;<span style="color:#b5cea8">0</span>;&nbsp;i&nbsp;&lt;&nbsp;<span style="color:#b5cea8">1000</span>;&nbsp;i++)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;cached&nbsp;=&nbsp;redis.get(<span style="color:#ce9178">&quot;key&quot;</span>);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;dbVal&nbsp;=&nbsp;db.query(<span style="color:#ce9178">&quot;key&quot;</span>);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">if</span>&nbsp;(!cached.equals(dbVal))&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;System.out.println(<span style="color:#ce9178">&quot;不一致！缓存=&quot;</span>&nbsp;+&nbsp;cached&nbsp;+&nbsp;<span style="color:#ce9178">&quot;&nbsp;DB=&quot;</span>&nbsp;+&nbsp;dbVal);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>});<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">用这个脚本跑不同方案，你就能直观看到不一致的频次和时间窗口。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">扩展 &amp; 进阶方向</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">读写锁 + 缓存</strong>：强一致性方案（性能换一致性），适合金额类场景</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Redis 分布式锁 + 双删</strong>：在延迟双删上加锁，进一步缩小时间窗口</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Canal + 自定义注解</strong>：通过注解指定缓存 key 规则，让 Canal 客户端自动拼 key 删缓存</span></section></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">参考资料</h2>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Canal 官方文档<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[1]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Redis 事务与管道<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[2]</sup></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">Cache Aside Pattern (Martin Fowler)<sup style="font-size:12px;color:#326891;vertical-align:super;margin-left:2px">[3]</sup></span></section></section>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px">
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">📌 本文是「面向面试之 Redis」系列第 7 篇（番外）<br />
+• 上一篇：Redis 系列六：Redis 内存淘汰策略与 LRU 算法实现原理<br />
+• 下一篇：Redis 系列八（番外）：大 Key 排查与性能调优——线上实战记录（待发布）</p></section>
+<section style="margin-top:32px;padding-top:16px;border-top:1px solid #d5cfc5">
+<p style="font-size:14px;font-weight:bold;color:#999999;margin-bottom:12px" data-darkmode-color="#888888">参考链接</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[1] Canal 官方文档: https://github.com/alibaba/canal</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[2] Redis 事务与管道: https://redis.io/docs/manual/transactions/</p>
+<p style="font-size:13px;color:#999999;margin-bottom:6px;line-height:1.6;word-break:break-all" data-darkmode-color="#888888">[3] Cache Aside Pattern (Martin Fowler): https://martinfowler.com/bliki/CacheAside.html</p>
+</section>
+</div>
+
+<script>
+function switchFontSize(size) {
+    // 更新按钮状态
+    document.querySelectorAll('.fs-btn').forEach(function(btn) {
+        if (parseInt(btn.dataset.size) === size) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 修改可见预览区和隐藏复制区的 p 标签
+    ['articleContent', 'wechatHtml'].forEach(function(id) {
+        var container = document.getElementById(id);
+        if (!container) return;
+        container.querySelectorAll('p').forEach(function(p) {
+            var currentSize = parseInt(window.getComputedStyle(p).fontSize);
+            if (currentSize >= 14 && currentSize <= 16) {
+                p.style.fontSize = size + 'px';
+                p.style.lineHeight = size === 16 ? '1.75' : '1.8';
+            }
+        });
+        // 修改列表项文字
+        container.querySelectorAll('[style*="font-size:15px"]').forEach(function(el) {
+            if (el.tagName === 'SPAN' || el.tagName === 'SECTION') {
+                el.style.fontSize = size + 'px';
+            }
+        });
+    });
+
+    // 保存选择到 localStorage
+    localStorage.setItem('wechat-format-fontsize', size);
+}
+
+// 页面加载时恢复上次选择
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('wechat-format-fontsize');
+    if (saved && saved !== '15') {
+        switchFontSize(parseInt(saved));
+    }
+});
+
+function copyToWechat() {
+    const source = document.getElementById('wechatHtml');
+    const range = document.createRange();
+    range.selectNodeContents(source);
+
+    // 临时让元素可见（否则某些浏览器不允许复制隐藏元素）
+    source.style.position = 'fixed';
+    source.style.left = '0';
+    source.style.top = '0';
+    source.style.opacity = '0.01';
+    source.style.width = '375px';
+    source.style.visibility = 'visible';
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '已复制!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '复制到微信';
+            btn.classList.remove('copied');
+        }, 2500);
+    } catch(e) {
+        // fallback: 尝试 Clipboard API
+        const html = source.innerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制到微信';
+                btn.classList.remove('copied');
+            }, 2500);
+        }).catch(() => {
+            alert('复制失败，请手动选中文章内容复制');
+        });
+    }
+
+    // 恢复隐藏
+    source.style.position = 'absolute';
+    source.style.left = '-9999px';
+    source.style.top = '-9999px';
+    source.style.opacity = '';
+    source.style.width = '';
+    source.style.visibility = 'hidden';
+
+    sel.removeAllRanges();
+}
+</script>
+</body>
+</html>

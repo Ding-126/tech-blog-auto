@@ -1,0 +1,217 @@
+<h2>开头</h2>
+<p>有一次周五晚上，我正在家吃饭，告警群突然响了——"Redis 响应延迟超过 3 秒"。</p>
+<p>我筷子一放就开电脑。登录 Redis 一看，<code>info commandstats</code> 里 <code>SMEMBERS</code> 命令的平均耗时从 0.5ms 飙升到了 1200ms，涨了 2400 倍。</p>
+<p>赶紧 <code>SMEMBERS</code> 那个 key 一看——<strong>这个 Set 里有 680 万个元素</strong>，占用内存 1.2GB。</p>
+<p>这就是典型的大 Key 问题。后来花了两个晚上重构，改成 Hash 分片存储，延迟降回了 0.8ms。</p>
+<p>今天用这个真实案例，把大 Key 和热 Key 的排查、定位、根治方法一次讲清楚。</p>
+<h2>核心结论先行</h2>
+<ul>
+<li><strong>大 Key</strong>：单个 key 的值过大（String &gt; 10KB 或集合 &gt; 5000 元素）→ 阻塞 Redis、网络带宽打满</li>
+<li><strong>热 Key</strong>：某个 key 被超高频率访问 → CPU 飙高、单节点成为瓶颈</li>
+<li><strong>排查工具</strong>：<code>redis-cli --bigkeys</code> 扫描 + <code>INFO commandstats</code> 定位慢命令 + <code>MONITOR</code> 采样</li>
+<li><strong>方案</strong>：大 Key 分片/拆分，热 Key 本地缓存 + 读写分离</li>
+</ul>
+<h2>先看现象</h2>
+<p>那天晚上的现象是这样的：</p>
+<pre style="margin:2px 0" ><code class="language-bash"># 1. 先看延迟
+redis-cli -h r-xxx.redis.rds.aliyuncs.com --latency -i 1
+min: 0.4ms, max: 4821ms, avg: 23.7ms
+</code></pre>
+<p>平均 24ms，最大 4.8 秒。正常 Redis 延迟应该在 1ms 以内。</p>
+<pre style="margin:2px 0" ><code class="language-bash"># 2. 看哪个命令最慢
+redis-cli INFO commandstats | head -20
+
+# cmdstat_smembers:calls=2387,usec=2891765,usec_per_call=1211.45
+# cmdstat_hgetall:calls=15673,usec=1872341,usec_per_call=119.47
+# cmdstat_get:calls=89234,usec=892340,usec_per_call=10.00
+</code></pre>
+<p><code>SMEMBERS</code> 每次调用平均 1.2 秒，这肯定有问题。问题就是这个命令操作的 key 太大了。</p>
+<p>我还遇到过另一种场景：热 Key。有次做秒杀活动，一个商品 key 每秒被访问 5 万次，那个 Redis 节点的 CPU 直接飙到 95%。这就是热 Key 的问题——单个节点扛不住。</p>
+<h2>大 Key 的 3 种形态</h2>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>特征</th>
+<th>典型场景</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>大 String</strong></td>
+<td>value &gt; 10KB</td>
+<td>缓存大 JSON、序列化对象</td>
+<td>读写慢、带宽高</td>
+</tr>
+<tr>
+<td><strong>大 Set/ZSet/List</strong></td>
+<td>元素 &gt; 5000</td>
+<td>未分页的关注列表、粉丝列表</td>
+<td>SMEMBERS/LRANGE 阻塞</td>
+</tr>
+<tr>
+<td><strong>大 Hash</strong></td>
+<td>field &gt; 10000</td>
+<td>海量用户属性未拆分</td>
+<td>HGETALL 耗时高</td>
+</tr>
+</tbody>
+</table>
+<h2>怎么排查大 Key</h2>
+<h3>方法一：--bigkeys（最常用）</h3>
+<pre style="margin:2px 0" ><code class="language-bash">redis-cli --bigkeys -i 0.1
+
+# 输出示例
+# Biggest Set   found so far 'user:follow:10086' with 6800000 members
+# Biggest String found so far 'session:token:abc' with 5242880 bytes
+# Biggest Hash  found so far 'product:202406' with 50000 fields
+</code></pre>
+<p><code>-i 0.1</code> 表示每扫描 100 个 key 暂停 0.1 秒，避免影响线上。如果你是阿里云 Redis，这个命令可能被禁用，可以用 <code>scan</code> 手动遍历。</p>
+<h3>方法二：DEBUG OBJECT（精确查看）</h3>
+<pre style="margin:2px 0" ><code class="language-bash">redis-cli DEBUG OBJECT user:follow:10086
+# Value at:0x7f8e1c0 refcount:1 encoding:hashtable serializedlength:2841971 lru:10827902 lru_seconds_idle:6
+</code></pre>
+<p><code>serializedlength: 2841971</code> 表示序列化后 2.8MB，实际内存占用可能更大。</p>
+<h3>方法三：MEMORY USAGE（精确内存）</h3>
+<pre style="margin:2px 0" ><code class="language-bash">redis-cli MEMORY USAGE user:follow:10086
+(integer) 1283456712  # 约 1.2GB
+</code></pre>
+<p><strong>注意</strong>：<code>MEMORY USAGE</code> 本身会遍历整个 key，大 Key 上执行这个命令也会阻塞，谨慎使用。</p>
+<h2>大 Key 怎么根治</h2>
+<h3>方案一：拆分（最推荐）</h3>
+<p>把一个大 Set/Hash 拆成多个小 key。比如上面的 680 万粉丝，按粉丝 ID 哈希分到 100 个 key 里：</p>
+<pre style="margin:2px 0" ><code class="language-java">public class FollowService {
+    private static final int BUCKET_SIZE = 100;
+
+    public String buildKey(Long userId) {
+        return &quot;user:follow:&quot; + userId + &quot;:&quot; + (userId % BUCKET_SIZE);
+    }
+
+    public Set&lt;Long&gt; getFollows(Long userId) {
+        Set&lt;Long&gt; all = new HashSet&lt;&gt;();
+        for (int i = 0; i &lt; BUCKET_SIZE; i++) {
+            String key = &quot;user:follow:&quot; + userId + &quot;:&quot; + i;
+            Set&lt;Long&gt; part = redis.sMembers(key);
+            all.addAll(part);
+        }
+        return all;
+    }
+}
+</code></pre>
+<p>每个 key 约 6.8 万元素，<code>SMEMBERS</code> 耗时从 1.2 秒降到 15ms。代价是查询时要合并 100 个 key，但 100 次 15ms 的网络开销也就 1.5 秒——比原来 1.2 秒阻塞单次好很多，而且不会阻塞 Redis。</p>
+<h3>方案二：冷热分离</h3>
+<p>把大 Key 里的数据按访问频率分离：</p>
+<ul>
+<li>热数据（最近 7 天的）放在 Redis</li>
+<li>冷数据（7 天前的）放到 MySQL/Tair 等后端存储</li>
+</ul>
+<pre style="margin:2px 0" ><code class="language-java">public List&lt;String&gt; getMessages(Long userId, int page, int size) {
+    String hotKey = &quot;msg:hot:&quot; + userId;
+    // 先查 Redis 热数据
+    List&lt;String&gt; hot = redis.lRange(hotKey, 0, -1);
+    if (page * size &lt; hot.size()) {
+        return hot.subList(page * size, Math.min((page+1)*size, hot.size()));
+    }
+    // 热数据不够，查冷存储
+    return coldDB.queryMessages(userId, page, size);
+}
+</code></pre>
+<h3>方案三：压缩</h3>
+<p>如果是大 String，可以压缩后再存：</p>
+<pre style="margin:2px 0" ><code class="language-java">// 写入时压缩
+String json = objectMapper.writeValueAsString(data);
+byte[] compressed = gzip.compress(json.getBytes());
+redis.set(key, compressed);
+
+// 读取时解压
+byte[] compressed = redis.get(key);
+String json = new String(gzip.decompress(compressed));
+Data data = objectMapper.readValue(json);
+</code></pre>
+<p>实测 JSON 压缩率能到 5:1 到 10:1，对大 JSON 场景很有效。</p>
+<h2>热 Key 怎么排查</h2>
+<p>热 Key 的表现是某些 key 的 QPS 异常高：</p>
+<pre style="margin:2px 0" ><code class="language-bash"># 用 MONITOR 采样 10 秒，统计 key 访问频率
+redis-cli MONITOR | head -100000 | awk '{print $4}' | sort | uniq -c | sort -rn | head -10
+
+# 输出
+# 45213 &quot;GET&quot; &quot;product:123456&quot;
+# 23451 &quot;GET&quot; &quot;product:789012&quot;
+# 8921 &quot;SET&quot; &quot;session:token:xxx&quot;
+</code></pre>
+<p>这个 <code>product:123456</code> 每秒 4500 次 GET，就是热 Key。</p>
+<p><strong>更安全的做法</strong>：用 <code>redis-cli --hotkeys</code>（Redis 6.0+）：</p>
+<pre style="margin:2px 0" ><code class="language-bash">redis-cli --hotkeys
+</code></pre>
+<p>注意 <code>MONITOR</code> 在高并发下会消耗大量 CPU，可能导致 Redis 延迟升高。线上谨慎使用。</p>
+<h2>热 Key 怎么解决</h2>
+<h3>方案一：本地缓存</h3>
+<pre style="margin:2px 0" ><code class="language-java">@Cacheable(value = &quot;product&quot;, key = &quot;#id&quot;, localCache = true)
+public Product getProduct(Long id) {
+    return productMapper.selectById(id);
+}
+</code></pre>
+<p>本地缓存（Caffeine/LoadingCache）扛掉 90% 以上的读请求，只有少量 MISS 才穿透到 Redis。我之前那个秒杀场景，加了本地缓存后 Redis QPS 从 5 万降到了 3000，CPU 从 95% 降到了 20%。</p>
+<h3>方案二：读写分离</h3>
+<p>把读请求分散到从库：</p>
+<pre style="margin:2px 0" ><code>写请求 → Master
+读请求 → Slave1 / Slave2 / Slave3（轮询）
+</code></pre>
+<p>Redis 的主从复制是异步的，从库可能读到稍旧的数据。但对大多数读多写少的场景来说，可以接受。</p>
+<h3>方案三：key 散列</h3>
+<p>在 key 上加随机后缀，让热 key 分散到多个节点。比如秒杀商品 key <code>product:123456</code> 可以拆成：</p>
+<pre style="margin:2px 0" ><code class="language-java">// 读的时候随机选一个副本
+int replica = ThreadLocalRandom.current().nextInt(10);
+String key = &quot;product:123456:&quot; + replica;
+String value = redis.get(key);
+if (value == null) {
+    // MISS 时从 DB 加载
+    value = loadFromDB(123456);
+    // 写到所有副本
+    for (int i = 0; i &lt; 10; i++) {
+        redis.setex(&quot;product:123456:&quot; + i, 300, value);
+    }
+}
+</code></pre>
+<p><strong>注意</strong>：这个方案适用于 Redis Cluster，对单个 Redis 实例没用——数据都在同一台机器上。</p>
+<h2>完整排查流程</h2>
+<p>我一般按这个步骤走：</p>
+<pre style="margin:2px 0" ><code>收到告警（延迟高 / CPU 高）
+    ↓
+1. redis-cli --latency 确认延迟
+    ↓
+2. INFO commandstats 定位慢命令
+    ↓
+3. 根据慢命令判断是大 Key（SMEMBERS/HGETALL/LRANGE）还是热 Key（某命令调用量异常高）
+    ↓
+   ├─ 大 Key → --bigkeys 定位具体 key
+   │           → 分拆 / 冷热分离 / 压缩
+   │
+   └─ 热 Key → MONITOR 采样确认 key
+               → 本地缓存 / 读写分离 / key 散列
+    ↓
+4. 验证：再次 --latency 确认延迟回到正常水平
+</code></pre>
+<h2>扩展 &amp; 进阶方向</h2>
+<ul>
+<li><strong>阿里云 Redis 的 bigkey 和 hotkey 诊断</strong>：云 Redis 自带大 Key 和热 Key 诊断功能，在控制台开启即可</li>
+<li><strong>Redis 7.0 的 Function 代替 Lua</strong>：可以在服务端做复杂的数据分片逻辑，减少网络开销</li>
+<li><strong>Redis 慢日志</strong>：<code>SLOWLOG GET 100</code> 查看最近 100 条慢查询，定位问题很快</li>
+</ul>
+<h2>参考资料</h2>
+<ul>
+<li>Redis 大 Key 最佳实践<sup style="__FN_9a256b1a_SUP__">[1]</sup></li>
+<li>Redis Big Keys 扫描<sup style="__FN_9a256b1a_SUP__">[2]</sup></li>
+<li>阿里云 Redis 诊断与优化<sup style="__FN_9a256b1a_SUP__">[3]</sup></li>
+</ul>
+<hr />
+<p>📌 本文是「面向面试之 Redis」系列第 8 篇（番外，完结篇）<br />
+• 上一篇：<a href="/posts/redis-7-缓存与数据库一致/">Redis 系列七（番外）：缓存与数据库一致性——4 种方案从简单到可靠</a><br />
+• 🎉 Redis 系列全部完成！共 6 篇正片 + 2 篇番外</p>
+<section style="__FN_9a256b1a_SECTION__">
+<p style="margin:0 0 6px" style="__FN_9a256b1a_TITLE__">参考链接</p>
+<p style="margin:0 0 6px" style="__FN_9a256b1a_ITEM__">[1] Redis 大 Key 最佳实践: https://redis.io/docs/management/optimization/latency/</p>
+<p style="margin:0 0 6px" style="__FN_9a256b1a_ITEM__">[2] Redis Big Keys 扫描: https://redis.io/commands/scan/#the--bigkeys-option</p>
+<p style="margin:0 0 6px" style="__FN_9a256b1a_ITEM__">[3] 阿里云 Redis 诊断与优化: https://help.aliyun.com/document_detail/26355.html</p>
+</section>

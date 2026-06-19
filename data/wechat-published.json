@@ -1,5 +1,8 @@
 [
   "java-optional-10-patterns-npe-guide",
   "java8-to-java21-migration-guide",
-  "redis-data-types-advanced-usage"
+  "redis-data-types-advanced-usage",
+  "cpu-100-arthas-troubleshoot",
+  "troubleshoot-1-cpu-100-arthas",
+  "troubleshoot-2-内存泄漏"
 ]

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>快速扩容，让流量分散 - 微信排版预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+}
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.toolbar-info {
+    font-size: 13px;
+    color: #666;
+}
+.toolbar-info span {
+    margin-right: 12px;
+}
+.toolbar-info .theme-name {
+    background: #f5f5f5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+}
+.copy-btn {
+    padding: 10px 24px;
+    background: #07c160;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.copy-btn:hover { background: #06ae56; transform: translateY(-1px); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied {
+    background: #34c759;
+}
+.phone-frame {
+    max-width: 415px;
+    margin: 76px auto 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.phone-header {
+    background: #ededed;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 1px solid #e0e0e0;
+}
+.article-content {
+    padding: 20px;
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 隐藏的纯微信 HTML，用于复制 */
+#wechatHtml {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 375px;          /* 限宽，避免子 section 撑到视口右边漏出色块 */
+    overflow: hidden;
+    visibility: hidden;    /* 复制时 JS 会临时恢复 visibility */
+    pointer-events: none;
+}
+/* ── Font Size Selector ── */
+.font-size-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px auto;
+    padding: 8px 0;
+    max-width: 415px;
+}
+.fs-label {
+    font-size: 13px;
+    color: #999;
+}
+.fs-btn {
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.fs-btn:hover {
+    border-color: #07C160;
+    color: #07C160;
+}
+.fs-btn.active {
+    background: #07C160;
+    border-color: #07C160;
+    color: #fff;
+}
+@media (max-width: 480px) {
+    .phone-frame {
+        margin: 60px 0 20px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toolbar {
+        padding: 8px 12px;
+    }
+    .copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <div class="toolbar-info">
+            <span class="theme-name">报纸</span>
+            <span>1,148 字</span>
+        </div>
+    </div>
+    <button class="copy-btn" onclick="copyToWechat()">复制到微信</button>
+</div>
+
+<div class="font-size-selector">
+    <span class="fs-label">字号</span>
+    <button class="fs-btn active" data-size="15" onclick="switchFontSize(15)">15px</button>
+    <button class="fs-btn" data-size="16" onclick="switchFontSize(16)">16px</button>
+</div>
+
+<div class="phone-frame">
+    <div class="phone-header">微信公众号预览</div>
+    <div class="article-content" id="articleContent">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">凌晨三点的报警</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">去年双十一大促压测那段时间，凌晨三点我被值班电话吵醒。运维兄弟语气很急："订单服务 OOM 了，Pod 连续重启三次，核心链路挂了。"</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我爬起来打开电脑，先看了一眼监控大盘。Grafana 上的堆内存曲线像过山车——刚重启时只占 30%，然后以肉眼可见的速度往上爬，大概六小时后触顶，然后就 OOM Kill。重启又爬，反复循环。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这种"缓慢泄漏 + 周期性死亡"的模式，第一反应就是：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">要么线程泄漏，要么对象泄漏</strong>。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第一步：先止血，再查因</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">很多人一上来就 dump 堆快照、装 MAT，这不对。线上正在挂，你先要把它拉起来。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我当时的操作：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;快速扩容，让流量分散</span><br>kubectl&nbsp;scale&nbsp;deployment&nbsp;order-service&nbsp;--replicas=<span style="color:#b5cea8">6</span><br><br>#&nbsp;加&nbsp;JVM&nbsp;参数，下次&nbsp;OOM&nbsp;自动&nbsp;dump<br>kubectl&nbsp;<span style="color:#4ec9b0">set</span>&nbsp;env&nbsp;deployment&nbsp;order-service&nbsp;\<br>&nbsp;&nbsp;JAVA_OPTS=<span style="color:#ce9178">&quot;-XX:+HeapDumpOnOutOfMemoryError&nbsp;\<br>&nbsp;&nbsp;-XX:HeapDumpPath=/data/dumps/&nbsp;\<br>&nbsp;&nbsp;-XX:MetaspaceSize=<span style="color:#b5cea8">256</span>m&nbsp;\<br>&nbsp;&nbsp;-Xmx4g&nbsp;-Xms4g&quot;</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">扩容六副本之后，单节点的压力降下来了，再触发 OOM 的时间窗口就长了，给我们留出排查空间。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">加 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">HeapDumpOnOutOfMemoryError</code> 是常规操作，但这里有个坑：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">如果你没挂独立数据盘，Pod 重启后 dump 文件就丢了</strong>。所以我提前配了 PVC 挂载，dump 文件落到持久卷上。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">等了一个多小时，终于抓到了一个 dump 文件。好戏开始了。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第二步：用 MAT 揪出"吃内存大户"</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">拿到 dump 文件，下载到本地，用 Eclipse MAT 打开。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">第一步不是瞎看，而是直接跑 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Leak Suspects Report</strong>。MAT 的自动分析会告诉你最可疑的对象链条。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">报告结果让我有点意外：</p>
+<section data-role="blockquote" style="border-top:1px solid #d5cfc5;border-bottom:1px solid #d5cfc5;background:#f7f3ee;padding:18px 20px;border-radius:0;font-size:16px;color:#555555;line-height:1.7;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16">
+<p style="font-size:16px;color:#000000;line-height:1.7;margin-bottom:0;background:transparent">Problem Suspect 1: 一个 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">java.util.HashMap$Node[]</code> 实例占用了堆的 68%（约 2.7GB），由 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 持有。</p>
+</section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">点进去一看，<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 里面有个 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ConcurrentHashMap</code>，存的居然是<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">用户的购物车快照</strong>。每次用户在订单页操作一次，就往里塞一条，但<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">只有 put，没有 remove</strong>。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第三步：确认泄漏点——不只看代码，要串链路</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">到这里，代码里的"罪魁祸首"基本锁定了。但我没急着改代码，我多做了两步验证：</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">验证 1：GC Root 链路确认</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在 MAT 的 "Merge Shortest Paths to GC Roots" 里，排除所有软引用/弱引用，看一下这个 HashMap 为什么没被回收：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">SessionManager.cartSnapshots<br>&nbsp;&nbsp;└──&nbsp;ConcurrentHashMap&nbsp;(2.7GB)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──&nbsp;Entry[]&nbsp;(无数个&nbsp;cartSnapshot&nbsp;对象)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──&nbsp;cartId&nbsp;(String)&nbsp;→&nbsp;都是唯一的<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">没有工具可以回收它。对象还活着，因为 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 是 Spring 管理的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">@Service</code> 单例，只要应用不挂，它就一直在。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">验证 2：数量和时间分布</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">MAT 的 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Histogram</strong> 里，我看了一下 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">cartSnapshot</code> 对象的数量，大约 42 万个。结合压测跑了 6 个小时，算下来：</p>
+<section data-role="blockquote" style="border-top:1px solid #d5cfc5;border-bottom:1px solid #d5cfc5;background:#f7f3ee;padding:18px 20px;border-radius:0;font-size:16px;color:#555555;line-height:1.7;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16">
+<p style="font-size:16px;color:#000000;line-height:1.7;margin-bottom:0;background:transparent">42 万 / (6h × 3600s) ≈ 每秒新增 20 个对象</p>
+</section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">跟 QPS 对比一下，这个服务的 QPS 高峰在 2000 左右，说明<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">不是每次请求都创建泄漏对象</strong>。回头翻代码，那 20/s 对应的是"提交订单前、用户修改购物车"的场景。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这个小验证虽然没改变结论，但让我对泄漏的「严重程度」有了底——它不是灾难级的（每秒泄漏几百兆），但跑 6 小时照样撑爆 4G 堆。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第四步：源码修复——怎么拆这颗雷</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">找到代码，问题就在 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 里：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#c586c0">@Component</span><br>public&nbsp;<span style="color:#569cd6">class</span>&nbsp;SessionManager&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;final&nbsp;ConcurrentHashMap&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CartSnapshot&gt;&nbsp;cartSnapshots&nbsp;=&nbsp;<span style="color:#569cd6">new</span>&nbsp;ConcurrentHashMap&lt;&gt;();<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;snapshotCart(<span style="color:#4ec9b0">String</span>&nbsp;sessionId,&nbsp;Cart&nbsp;cart)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;每次用户操作购物车都存一份快照</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CartSnapshot&nbsp;snapshot&nbsp;=&nbsp;CartSnapshot.<span style="color:#569cd6">from</span>(cart);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cartSnapshots.put(sessionId&nbsp;+&nbsp;<span style="color:#ce9178">&quot;:&quot;</span>&nbsp;+&nbsp;System.currentTimeMillis(),&nbsp;snapshot);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;⚠️&nbsp;没有清除逻辑！</span><br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这个 key 里带时间戳，每次都不一样，所以 HashMap 永远只增不减。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">修复方案要考虑业务场景。这个快照是用来做"用户误操作回退"用的，业务上只保留最近 5 次就够了。我改成了 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">LRU 缓存</strong>：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#c586c0">@Component</span><br>public&nbsp;<span style="color:#569cd6">class</span>&nbsp;SessionManager&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;final&nbsp;Cache&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CartSnapshot&gt;&nbsp;cartSnapshots&nbsp;=&nbsp;Caffeine.newBuilder()<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.maximumSize(<span style="color:#b5cea8">5000</span>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.expireAfterWrite(<span style="color:#b5cea8">30</span>,&nbsp;TimeUnit.MINUTES)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.build();<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;snapshotCart(<span style="color:#4ec9b0">String</span>&nbsp;sessionId,&nbsp;Cart&nbsp;cart)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;key&nbsp;=&nbsp;sessionId&nbsp;+&nbsp;<span style="color:#ce9178">&quot;:&quot;</span>&nbsp;+&nbsp;System.currentTimeMillis();<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cartSnapshots.put(key,&nbsp;CartSnapshot.<span style="color:#569cd6">from</span>(cart));<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;CartSnapshot&nbsp;getSnapshot(<span style="color:#4ec9b0">String</span>&nbsp;key)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">return</span>&nbsp;cartSnapshots.getIfPresent(key);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">用 Caffeine 替换手写的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ConcurrentHashMap</code>，限制最大 5000 个条目，超时 30 分钟自动过期。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">这里有个选择：</strong> 为什么不用 Guava Cache？不是不能用，Caffeine 在淘汰策略的吞吐量上比 Guava 好一个数量级（基于 W-TinyLFU），这个场景 QPS 2000，Guava 也能扛，但团队内部已经统一用 Caffeine 了，保持一致更好。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第五步：验证修复</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">代码改完，我没直接上线。先在压测环境复现场景：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">模拟 2000 QPS 混合流量</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">持续跑 8 小时（比之前触发 OOM 的 6 小时还多 2 小时）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">3</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">监控堆内存曲线</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">结果对比很直观：</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">| 指标 | 修复前 | 修复后 |<br />
+|</p></section>
+    </div>
+</div>
+
+<!-- 隐藏区域：存放纯微信 HTML（不含预览壳样式），复制时用这个 -->
+<div id="wechatHtml">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">凌晨三点的报警</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">去年双十一大促压测那段时间，凌晨三点我被值班电话吵醒。运维兄弟语气很急："订单服务 OOM 了，Pod 连续重启三次，核心链路挂了。"</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我爬起来打开电脑，先看了一眼监控大盘。Grafana 上的堆内存曲线像过山车——刚重启时只占 30%，然后以肉眼可见的速度往上爬，大概六小时后触顶，然后就 OOM Kill。重启又爬，反复循环。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这种"缓慢泄漏 + 周期性死亡"的模式，第一反应就是：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">要么线程泄漏，要么对象泄漏</strong>。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第一步：先止血，再查因</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">很多人一上来就 dump 堆快照、装 MAT，这不对。线上正在挂，你先要把它拉起来。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我当时的操作：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;快速扩容，让流量分散</span><br>kubectl&nbsp;scale&nbsp;deployment&nbsp;order-service&nbsp;--replicas=<span style="color:#b5cea8">6</span><br><br>#&nbsp;加&nbsp;JVM&nbsp;参数，下次&nbsp;OOM&nbsp;自动&nbsp;dump<br>kubectl&nbsp;<span style="color:#4ec9b0">set</span>&nbsp;env&nbsp;deployment&nbsp;order-service&nbsp;\<br>&nbsp;&nbsp;JAVA_OPTS=<span style="color:#ce9178">&quot;-XX:+HeapDumpOnOutOfMemoryError&nbsp;\<br>&nbsp;&nbsp;-XX:HeapDumpPath=/data/dumps/&nbsp;\<br>&nbsp;&nbsp;-XX:MetaspaceSize=<span style="color:#b5cea8">256</span>m&nbsp;\<br>&nbsp;&nbsp;-Xmx4g&nbsp;-Xms4g&quot;</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">扩容六副本之后，单节点的压力降下来了，再触发 OOM 的时间窗口就长了，给我们留出排查空间。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">加 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">HeapDumpOnOutOfMemoryError</code> 是常规操作，但这里有个坑：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">如果你没挂独立数据盘，Pod 重启后 dump 文件就丢了</strong>。所以我提前配了 PVC 挂载，dump 文件落到持久卷上。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">等了一个多小时，终于抓到了一个 dump 文件。好戏开始了。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第二步：用 MAT 揪出"吃内存大户"</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">拿到 dump 文件，下载到本地，用 Eclipse MAT 打开。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">第一步不是瞎看，而是直接跑 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Leak Suspects Report</strong>。MAT 的自动分析会告诉你最可疑的对象链条。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">报告结果让我有点意外：</p>
+<section data-role="blockquote" style="border-top:1px solid #d5cfc5;border-bottom:1px solid #d5cfc5;background:#f7f3ee;padding:18px 20px;border-radius:0;font-size:16px;color:#555555;line-height:1.7;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16">
+<p style="font-size:16px;color:#000000;line-height:1.7;margin-bottom:0;background:transparent">Problem Suspect 1: 一个 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">java.util.HashMap$Node[]</code> 实例占用了堆的 68%（约 2.7GB），由 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 持有。</p>
+</section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">点进去一看，<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 里面有个 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ConcurrentHashMap</code>，存的居然是<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">用户的购物车快照</strong>。每次用户在订单页操作一次，就往里塞一条，但<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">只有 put，没有 remove</strong>。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第三步：确认泄漏点——不只看代码，要串链路</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">到这里，代码里的"罪魁祸首"基本锁定了。但我没急着改代码，我多做了两步验证：</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">验证 1：GC Root 链路确认</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">在 MAT 的 "Merge Shortest Paths to GC Roots" 里，排除所有软引用/弱引用，看一下这个 HashMap 为什么没被回收：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">SessionManager.cartSnapshots<br>&nbsp;&nbsp;└──&nbsp;ConcurrentHashMap&nbsp;(2.7GB)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──&nbsp;Entry[]&nbsp;(无数个&nbsp;cartSnapshot&nbsp;对象)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──&nbsp;cartId&nbsp;(String)&nbsp;→&nbsp;都是唯一的<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">没有工具可以回收它。对象还活着，因为 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 是 Spring 管理的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">@Service</code> 单例，只要应用不挂，它就一直在。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">验证 2：数量和时间分布</strong></p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">MAT 的 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Histogram</strong> 里，我看了一下 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">cartSnapshot</code> 对象的数量，大约 42 万个。结合压测跑了 6 个小时，算下来：</p>
+<section data-role="blockquote" style="border-top:1px solid #d5cfc5;border-bottom:1px solid #d5cfc5;background:#f7f3ee;padding:18px 20px;border-radius:0;font-size:16px;color:#555555;line-height:1.7;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16">
+<p style="font-size:16px;color:#000000;line-height:1.7;margin-bottom:0;background:transparent">42 万 / (6h × 3600s) ≈ 每秒新增 20 个对象</p>
+</section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">跟 QPS 对比一下，这个服务的 QPS 高峰在 2000 左右，说明<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">不是每次请求都创建泄漏对象</strong>。回头翻代码，那 20/s 对应的是"提交订单前、用户修改购物车"的场景。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这个小验证虽然没改变结论，但让我对泄漏的「严重程度」有了底——它不是灾难级的（每秒泄漏几百兆），但跑 6 小时照样撑爆 4G 堆。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第四步：源码修复——怎么拆这颗雷</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">找到代码，问题就在 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">SessionManager</code> 里：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#c586c0">@Component</span><br>public&nbsp;<span style="color:#569cd6">class</span>&nbsp;SessionManager&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;final&nbsp;ConcurrentHashMap&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CartSnapshot&gt;&nbsp;cartSnapshots&nbsp;=&nbsp;<span style="color:#569cd6">new</span>&nbsp;ConcurrentHashMap&lt;&gt;();<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;snapshotCart(<span style="color:#4ec9b0">String</span>&nbsp;sessionId,&nbsp;Cart&nbsp;cart)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;每次用户操作购物车都存一份快照</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CartSnapshot&nbsp;snapshot&nbsp;=&nbsp;CartSnapshot.<span style="color:#569cd6">from</span>(cart);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cartSnapshots.put(sessionId&nbsp;+&nbsp;<span style="color:#ce9178">&quot;:&quot;</span>&nbsp;+&nbsp;System.currentTimeMillis(),&nbsp;snapshot);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;⚠️&nbsp;没有清除逻辑！</span><br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这个 key 里带时间戳，每次都不一样，所以 HashMap 永远只增不减。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">修复方案要考虑业务场景。这个快照是用来做"用户误操作回退"用的，业务上只保留最近 5 次就够了。我改成了 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">LRU 缓存</strong>：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#c586c0">@Component</span><br>public&nbsp;<span style="color:#569cd6">class</span>&nbsp;SessionManager&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;final&nbsp;Cache&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CartSnapshot&gt;&nbsp;cartSnapshots&nbsp;=&nbsp;Caffeine.newBuilder()<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.maximumSize(<span style="color:#b5cea8">5000</span>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.expireAfterWrite(<span style="color:#b5cea8">30</span>,&nbsp;TimeUnit.MINUTES)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.build();<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;snapshotCart(<span style="color:#4ec9b0">String</span>&nbsp;sessionId,&nbsp;Cart&nbsp;cart)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">String</span>&nbsp;key&nbsp;=&nbsp;sessionId&nbsp;+&nbsp;<span style="color:#ce9178">&quot;:&quot;</span>&nbsp;+&nbsp;System.currentTimeMillis();<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cartSnapshots.put(key,&nbsp;CartSnapshot.<span style="color:#569cd6">from</span>(cart));<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;CartSnapshot&nbsp;getSnapshot(<span style="color:#4ec9b0">String</span>&nbsp;key)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">return</span>&nbsp;cartSnapshots.getIfPresent(key);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">用 Caffeine 替换手写的 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">ConcurrentHashMap</code>，限制最大 5000 个条目，超时 30 分钟自动过期。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">这里有个选择：</strong> 为什么不用 Guava Cache？不是不能用，Caffeine 在淘汰策略的吞吐量上比 Guava 好一个数量级（基于 W-TinyLFU），这个场景 QPS 2000，Guava 也能扛，但团队内部已经统一用 Caffeine 了，保持一致更好。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">第五步：验证修复</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">代码改完，我没直接上线。先在压测环境复现场景：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">模拟 2000 QPS 混合流量</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">持续跑 8 小时（比之前触发 OOM 的 6 小时还多 2 小时）</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">3</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8">监控堆内存曲线</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">结果对比很直观：</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">| 指标 | 修复前 | 修复后 |<br />
+|</p></section>
+</div>
+
+<script>
+function switchFontSize(size) {
+    // 更新按钮状态
+    document.querySelectorAll('.fs-btn').forEach(function(btn) {
+        if (parseInt(btn.dataset.size) === size) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 修改可见预览区和隐藏复制区的 p 标签
+    ['articleContent', 'wechatHtml'].forEach(function(id) {
+        var container = document.getElementById(id);
+        if (!container) return;
+        container.querySelectorAll('p').forEach(function(p) {
+            var currentSize = parseInt(window.getComputedStyle(p).fontSize);
+            if (currentSize >= 14 && currentSize <= 16) {
+                p.style.fontSize = size + 'px';
+                p.style.lineHeight = size === 16 ? '1.75' : '1.8';
+            }
+        });
+        // 修改列表项文字
+        container.querySelectorAll('[style*="font-size:15px"]').forEach(function(el) {
+            if (el.tagName === 'SPAN' || el.tagName === 'SECTION') {
+                el.style.fontSize = size + 'px';
+            }
+        });
+    });
+
+    // 保存选择到 localStorage
+    localStorage.setItem('wechat-format-fontsize', size);
+}
+
+// 页面加载时恢复上次选择
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('wechat-format-fontsize');
+    if (saved && saved !== '15') {
+        switchFontSize(parseInt(saved));
+    }
+});
+
+function copyToWechat() {
+    const source = document.getElementById('wechatHtml');
+    const range = document.createRange();
+    range.selectNodeContents(source);
+
+    // 临时让元素可见（否则某些浏览器不允许复制隐藏元素）
+    source.style.position = 'fixed';
+    source.style.left = '0';
+    source.style.top = '0';
+    source.style.opacity = '0.01';
+    source.style.width = '375px';
+    source.style.visibility = 'visible';
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '已复制!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '复制到微信';
+            btn.classList.remove('copied');
+        }, 2500);
+    } catch(e) {
+        // fallback: 尝试 Clipboard API
+        const html = source.innerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制到微信';
+                btn.classList.remove('copied');
+            }, 2500);
+        }).catch(() => {
+            alert('复制失败，请手动选中文章内容复制');
+        });
+    }
+
+    // 恢复隐藏
+    source.style.position = 'absolute';
+    source.style.left = '-9999px';
+    source.style.top = '-9999px';
+    source.style.opacity = '';
+    source.style.width = '';
+    source.style.visibility = 'hidden';
+
+    sel.removeAllRanges();
+}
+</script>
+</body>
+</html>

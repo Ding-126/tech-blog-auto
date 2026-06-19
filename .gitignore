@@ -1,14 +1,16 @@
-public/
-resources/
-.hugo_build.lock
-.DS_Store
 
 # 抓取脚本的临时数据（每次 Cron 重新生成）
-data/hn-top.json
-data/gh-trending.json
-data/juejin-hot.json
-data/36kr-feed.json
-data/trends-merged.json
-
 # 微信开发者凭证（本地开发用，不要提交）
+.DS_Store
+.env
 .env.wechat.local
+.env.zhihu
+.hugo_build.lock
+Untitled
+data/36kr-feed.json
+data/gh-trending.json
+data/hn-top.json
+data/juejin-hot.json
+data/trends-merged.json
+public/
+resources/

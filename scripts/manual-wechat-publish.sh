@@ -231,6 +231,9 @@ except Exception as e:
     print(f'⚠️ 封面跳过: {e}')
 " "$TITLE"
 
+# ── 技术架构图 (复用 format-all.sh 的 diagram 生成) ──
+python3 "$ROOT/scripts/generate-diagram.py" "$FILE" "$SLUG" 2>&1 || true
+
 # ── 打开预览 ──
 if [ -f "$OUT_DIR/preview.html" ]; then
     echo "🌐 打开预览..."

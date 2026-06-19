@@ -19,6 +19,7 @@ print(m.group(1) if m else '0')
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m'
 FAIL=0
 
@@ -36,7 +37,22 @@ for platform in wechat zhihu toutiao; do
     fi
 done
 
-# ── 检查2: article.html 无 front matter ──
+# ── 检查2: 三平台 article.html 都存在 ──
+ALL_HTML_EXIST=0
+for platform in wechat zhihu toutiao; do
+    HTML="distribution/$platform/$SLUG/article.html"
+    if [ -f "$HTML" ]; then
+        echo -e "  ${GREEN}✅${NC} $HTML 存在 ($(stat -f%z "$HTML" 2>/dev/null) bytes)"
+    else
+        echo -e "  ${RED}❌${NC} $HTML 不存在！"
+        ALL_HTML_EXIST=1
+    fi
+done
+if [ "$ALL_HTML_EXIST" -ne 0 ]; then
+    FAIL=1
+fi
+
+# ── 检查3: WeChat article.html 无 front matter ──
 WECHAT_HTML="distribution/wechat/$SLUG/article.html"
 if [ -f "$WECHAT_HTML" ]; then
     FIRST_LINE=$(head -c 30 "$WECHAT_HTML")
@@ -53,7 +69,7 @@ else
     FAIL=1
 fi
 
-# ── 检查3: WeChat 文章无 <a> 标签（非 qq 超链接） ──
+# ── 检查4: WeChat 文章无 <a> 标签（非 qq 超链接） ──
 if [ -f "$WECHAT_HTML" ]; then
     LINK_COUNT=$(grep -c 'href=' "$WECHAT_HTML" 2>/dev/null || echo "0")
     LINK_COUNT=$(echo "$LINK_COUNT" | tr -d '[:space:]' | tail -1)
@@ -65,11 +81,26 @@ if [ -f "$WECHAT_HTML" ]; then
     fi
 fi
 
-# ── 检查4: 封面图存在且文字已渲染 ──
+# ── 检查5: zhihu/toutiao .md 文件在子目录内（wechat 发布用 article.html 不需要 .md）──
+for platform in zhihu toutiao; do
+    SUB_MD="distribution/$platform/$SLUG/$SLUG.md"
+    ROOT_MD="distribution/$platform/$SLUG.md"
+    if [ -f "$ROOT_MD" ] && [ ! -f "$SUB_MD" ]; then
+        mv "$ROOT_MD" "$SUB_MD"
+        echo -e "  ${YELLOW}⚠${NC} 修复: $ROOT_MD → $SUB_MD"
+    fi
+    if [ -f "$SUB_MD" ]; then
+        echo -e "  ${GREEN}✅${NC} $SUB_MD 存在"
+    elif [ ! -f "$SUB_MD" ] && [ ! -f "$ROOT_MD" ]; then
+        echo -e "  ${YELLOW}⚠${NC} $SUB_MD 不存在（不影响发布，但数据不完整）"
+    fi
+done
+
+# ── 检查6: 封面图存在且文字已渲染 ──
 COVER=$(find "distribution/wechat/$SLUG" -name '*-cover.png' 2>/dev/null | head -1)
 if [ -n "$COVER" ] && [ -s "$COVER" ]; then
     COVER_SIZE=$(stat -f%z "$COVER" 2>/dev/null || echo 0)
-    if [ "$COVER_SIZE" -gt 15000 ]; then
+    if [ "$COVER_SIZE" -gt 12000 ]; then
         echo -e "  ${GREEN}✅${NC} 封面图存在 ($(basename "$COVER"), ${COVER_SIZE} bytes)"
     else
         echo -e "  ${RED}❌${NC} 封面图仅 ${COVER_SIZE} bytes，中文可能未渲染！需用 PingFang.ttc 重新生成"

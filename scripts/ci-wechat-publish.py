@@ -162,6 +162,21 @@ def main():
             config = json.load(f)
     config["wechat"]["app_id"] = os.environ.get("WECHAT_APP_ID", "")
     config["wechat"]["app_secret"] = os.environ.get("WECHAT_APP_SECRET", "")
+    # 如果 env 未加载，尝试从 .env.wechat.local 读取
+    if not config["wechat"]["app_secret"]:
+        env_path = os.path.join(os.path.dirname(__file__), "..", ".env.wechat.local")
+        print(f"  [DEBUG] env_path={env_path}")
+        print(f"  [DEBUG] env_path exists={os.path.exists(env_path)}")
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                if line.startswith("WECHAT_APP_ID="):
+                    config["wechat"]["app_id"] = line.split("=", 1)[1]
+                elif line.startswith("WECHAT_APP_SECRET="):
+                    val = line.split("=", 1)[1]
+                    config["wechat"]["app_secret"] = val
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 

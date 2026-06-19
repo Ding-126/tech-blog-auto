@@ -128,6 +128,84 @@
       },
       "published_at": "2026-06-18T07:48:22.433475+08:00",
       "updated_at": "2026-06-18T07:48:22.433910+08:00"
+    },
+    {
+      "slug": "anthropic-claude-china-restriction-impact",
+      "title": "Anthropic 限制中国使用 Claude：别骂了，这3件事现在就得动手",
+      "source_url": "https://juejin.cn/post/7649977961550987314",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/anthropic-claude-china-restriction-impact.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-18T18:47:50.551058+08:00",
+      "updated_at": "2026-06-18T18:47:50.551352+08:00"
+    },
+    {
+      "slug": "redis-7-缓存与数据库一致",
+      "title": "面向面试之 Redis 系列七（番外）：缓存与数据库一致性——4 种方案从简单到可靠",
+      "source_url": "",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/redis-7-缓存与数据库一致.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-18T22:19:34.464205+08:00",
+      "updated_at": "2026-06-18T22:19:34.464588+08:00"
+    },
+    {
+      "slug": "redis-8-大Key排查与性能调优",
+      "title": "面向面试之 Redis 系列八（番外）：大 Key 排查与性能调优——线上实战记录",
+      "source_url": "",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/redis-8-大Key排查与性能调优.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-18T22:43:54.989729+08:00",
+      "updated_at": "2026-06-18T22:43:54.990061+08:00"
+    },
+    {
+      "slug": "cpu-100-arthas-troubleshoot",
+      "title": "线上问题排查系列一：CPU 100% 了怎么办？一次 Arthas 定位实战",
+      "source_url": "https://blog.dudu.dev/posts/cpu-100-arthas-troubleshoot",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/cpu-100-arthas-troubleshoot.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-19T07:26:49.252156+08:00",
+      "updated_at": "2026-06-19T07:26:49.252471+08:00"
+    },
+    {
+      "slug": "troubleshoot-1-cpu-100-arthas",
+      "title": "troubleshoot-1-cpu-100-arthas",
+      "source_url": "",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/troubleshoot-1-cpu-100-arthas.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-19T13:00:27.170918+08:00",
+      "updated_at": "2026-06-19T13:00:27.171720+08:00"
+    },
+    {
+      "slug": "troubleshoot-2-内存泄漏",
+      "title": "troubleshoot-2-内存泄漏",
+      "source_url": "",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/troubleshoot-2-内存泄漏.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-19T13:23:35.356188+08:00",
+      "updated_at": "2026-06-19T13:23:35.356527+08:00"
     }
   ],
   "synced_at": "2026-06-15T13:27:03.678322+08:00"

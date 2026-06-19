@@ -37,7 +37,7 @@ if [ ! -f "$FILE" ]; then
 fi
 
 SLUG="$(basename "$FILE" .md)"
-HTML_FILE="$ROOT/distribution/wechat/${SLUG}.html"
+HTML_FILE="$ROOT/distribution/wechat/$SLUG/article.html"
 
 TITLE=$(python3 -c "
 import re
@@ -64,7 +64,7 @@ echo "✅ 凭证获取成功"
 # 2. 确保 HTML 存在
 if [ ! -f "$HTML_FILE" ]; then
   echo "⚠️ 生成分发文件..."
-  ./scripts/distribute-post.sh "$FILE"
+  bash scripts/format-all.sh "$FILE"
 fi
 
 # 3. 读取 HTML 并序列化为 JSON 字符串
