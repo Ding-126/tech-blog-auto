@@ -40,6 +40,12 @@ def read_front_matter(filepath: str) -> dict:
     if m:
         fm["title"] = m.group(1).strip()
 
+    # tags — parse ["tag1", "tag2"] or ["tag1", "CPU 100%"]
+    m = re.search(r'tags\s*=\s*\[([^\]]+)\]', text)
+    if m:
+        tags_str = m.group(1)
+        fm["tags"] = [t.strip().strip("\"'") for t in tags_str.split(",")]
+
     # series_number (optional)
     m = re.search(r"series_number\s*=\s*(\d+)", text)
     if m:
@@ -48,19 +54,34 @@ def read_front_matter(filepath: str) -> dict:
     return fm
 
 
-def find_series_config(series_name: str, configs: dict):
-    """Match series_name (possibly partial) against config keys."""
-    if not series_name:
+def match_article_config(fm: dict, configs: dict):
+    """Find first matching article config by series + keywords."""
+    articles = configs.get("articles", [])
+    if not articles:
         return None
 
-    # exact match
-    if series_name in configs.get("series", {}):
-        return configs["series"][series_name]
+    series_name = fm.get("series_name", "")
+    tags = fm.get("tags", [])
+    # Combine tags with keywords from front matter if present
+    all_keywords = " ".join(tags).lower()
 
-    # prefix match: "Redis 系列一二三" → matches "Redis"
-    for key in configs.get("series", {}):
-        if series_name.startswith(key) or key.startswith(series_name):
-            return configs["series"][key]
+    for article in articles:
+        match = article.get("match", {})
+        match_series = match.get("series", "")
+
+        # Series must match
+        if match_series and match_series not in series_name and series_name not in match_series:
+            continue
+
+        # Check keywords_include — any match is enough
+        kw_include = match.get("keywords_include", [])
+        if kw_include:
+            kw_hit = any(k.lower() in all_keywords for k in kw_include)
+            if not kw_hit:
+                continue
+
+        # All criteria passed
+        return article
 
     return None
 
@@ -83,11 +104,10 @@ def generate_diagram(post_file: str, slug: str):
         return None
 
     # find matching config
-    cfg = find_series_config(series_name, configs)
+    cfg = match_article_config(fm, configs)
     if cfg is None:
-        cfg = configs.get("fallback")
-        if not cfg:
-            return None
+        print("  diagram: 无匹配配置，跳过")
+        return None
 
     # output dir
     out_dir = os.path.join(ROOT, "distribution", "wechat", slug)

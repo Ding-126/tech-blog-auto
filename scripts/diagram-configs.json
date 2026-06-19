@@ -1,32 +1,10 @@
 {
-  "series": {
-    "Redis": {
-      "template": "architecture",
-      "style": 1,
-      "title": "Redis 核心架构",
-      "width": 960,
-      "height": 500,
-      "nodes": [
-        {"id": "client", "label": "应用服务\n(客户端)", "x": 80, "y": 100, "w": 160, "h": 60},
-        {"id": "redis", "label": "Redis 服务\n(内存数据库)", "x": 400, "y": 100, "w": 160, "h": 60},
-        {"id": "cache", "label": "缓存\n(热点数据)", "x": 120, "y": 310, "w": 140, "h": 55},
-        {"id": "dist-lock", "label": "分布式锁\n(SETNX/Redisson)", "x": 330, "y": 310, "w": 160, "h": 55},
-        {"id": "data-struct", "label": "数据结构\n(String/Hash/ZSet)", "x": 550, "y": 310, "w": 160, "h": 55},
-        {"id": "pubsub", "label": "消息\n(PubSub/Stream)", "x": 780, "y": 310, "w": 140, "h": 55}
-      ],
-      "arrows": [
-        {"source": "client", "target": "redis", "label": "请求"},
-        {"source": "redis", "target": "client", "label": "响应"},
-        {"source": "redis", "target": "cache", "label": "缓存读写"},
-        {"source": "redis", "target": "dist-lock", "label": "锁操作"},
-        {"source": "redis", "target": "data-struct", "label": "数据操作"},
-        {"source": "redis", "target": "pubsub", "label": "发布/订阅"}
-      ]
-    },
-    "线上问题排查": {
+  "articles": [
+    {
+      "match": {"series": "线上问题排查", "keywords_include": ["CPU", "Arthas"]},
       "template": "flowchart",
       "style": 1,
-      "title": "线上问题排查流程",
+      "title": "CPU 排查流程",
       "width": 800,
       "height": 700,
       "nodes": [
@@ -46,22 +24,55 @@
         {"source": "trace", "target": "root", "label": "第五步"},
         {"source": "root", "target": "verify", "label": "第六步"}
       ]
+    },
+    {
+      "match": {"series": "线上问题排查", "keywords_include": ["OOM", "MAT", "Heap Dump", "内存泄漏"]},
+      "template": "flowchart",
+      "style": 1,
+      "title": "内存泄漏排查流程",
+      "width": 800,
+      "height": 700,
+      "nodes": [
+        {"id": "alert", "label": "告警\n内存95%", "x": 280, "y": 20, "w": 200, "h": 50, "shape": "rounded"},
+        {"id": "jstat", "label": "jstat -gcutil\n看老年代+GC频率", "x": 280, "y": 110, "w": 200, "h": 60, "shape": "rounded"},
+        {"id": "dump", "label": "jmap -dump:live\ndump堆转储", "x": 280, "y": 210, "w": 200, "h": 60, "shape": "rounded"},
+        {"id": "mat", "label": "MAT Leak Suspects\n分析大对象", "x": 280, "y": 310, "w": 200, "h": 60, "shape": "rounded"},
+        {"id": "code", "label": "追源码\n找到未remove的HashMap", "x": 280, "y": 410, "w": 200, "h": 60, "shape": "rounded"},
+        {"id": "fix", "label": "修复\n加Caffeine缓存限容", "x": 280, "y": 510, "w": 200, "h": 60, "shape": "rounded"},
+        {"id": "verify", "label": "观察24h\n老年代稳定35%", "x": 280, "y": 610, "w": 200, "h": 60, "shape": "rounded"}
+      ],
+      "arrows": [
+        {"source": "alert", "target": "jstat", "label": "排查"},
+        {"source": "jstat", "target": "dump", "label": "确认泄漏"},
+        {"source": "dump", "target": "mat", "label": "分析"},
+        {"source": "mat", "target": "code", "label": "定位"},
+        {"source": "code", "target": "fix", "label": "修改"},
+        {"source": "fix", "target": "verify", "label": "验证"}
+      ]
+    },
+    {
+      "match": {"series": "Redis", "keywords_include": ["数据类型"]},
+      "template": "architecture",
+      "style": 1,
+      "title": "Redis 核心架构",
+      "width": 960,
+      "height": 500,
+      "nodes": [
+        {"id": "client", "label": "应用服务", "x": 80, "y": 100, "w": 160, "h": 60},
+        {"id": "redis", "label": "Redis", "x": 400, "y": 100, "w": 160, "h": 60},
+        {"id": "cache", "label": "缓存", "x": 120, "y": 310, "w": 140, "h": 55},
+        {"id": "dist-lock", "label": "分布式锁", "x": 330, "y": 310, "w": 160, "h": 55},
+        {"id": "data-struct", "label": "数据结构", "x": 550, "y": 310, "w": 160, "h": 55},
+        {"id": "pubsub", "label": "消息", "x": 780, "y": 310, "w": 140, "h": 55}
+      ],
+      "arrows": [
+        {"source": "client", "target": "redis", "label": "请求"},
+        {"source": "redis", "target": "cache", "label": "缓存"},
+        {"source": "redis", "target": "dist-lock", "label": "锁"},
+        {"source": "redis", "target": "data-struct", "label": "操作"},
+        {"source": "redis", "target": "pubsub", "label": "Pub/Sub"}
+      ]
     }
-  },
-  "fallback": {
-    "template": "architecture",
-    "style": 1,
-    "title": "技术架构概览",
-    "width": 800,
-    "height": 400,
-    "nodes": [
-      {"id": "client", "label": "客户端", "x": 80, "y": 140, "w": 140, "h": 50},
-      {"id": "service", "label": "后端服务", "x": 330, "y": 140, "w": 140, "h": 50},
-      {"id": "data", "label": "数据层", "x": 580, "y": 140, "w": 140, "h": 50}
-    ],
-    "arrows": [
-      {"source": "client", "target": "service", "label": "请求"},
-      {"source": "service", "target": "data", "label": "读写"}
-    ]
-  }
+  ],
+  "fallback": null
 }
