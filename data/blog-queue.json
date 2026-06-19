@@ -206,6 +206,19 @@
       },
       "published_at": "2026-06-19T13:23:35.356188+08:00",
       "updated_at": "2026-06-19T13:23:35.356527+08:00"
+    },
+    {
+      "slug": "troubleshoot-2-oom",
+      "title": "线上问题排查系列二：Java 内存泄漏——从堆转储到源码修复，完整记录",
+      "source_url": "https://blog.dudu.dev/posts/troubleshoot-2-oom",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/troubleshoot-2-oom.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-19T13:31:33.597470+08:00",
+      "updated_at": "2026-06-19T13:31:33.597836+08:00"
     }
   ],
   "synced_at": "2026-06-15T13:27:03.678322+08:00"

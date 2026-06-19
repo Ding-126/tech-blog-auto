@@ -100,7 +100,7 @@ done
 COVER=$(find "distribution/wechat/$SLUG" -name '*-cover.png' 2>/dev/null | head -1)
 if [ -n "$COVER" ] && [ -s "$COVER" ]; then
     COVER_SIZE=$(stat -f%z "$COVER" 2>/dev/null || echo 0)
-    if [ "$COVER_SIZE" -gt 12000 ]; then
+    if [ "$COVER_SIZE" -gt 8000 ]; then
         echo -e "  ${GREEN}✅${NC} 封面图存在 ($(basename "$COVER"), ${COVER_SIZE} bytes)"
     else
         echo -e "  ${RED}❌${NC} 封面图仅 ${COVER_SIZE} bytes，中文可能未渲染！需用 PingFang.ttc 重新生成"

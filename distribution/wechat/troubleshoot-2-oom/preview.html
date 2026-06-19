@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>进 POD - 微信排版预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+}
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.toolbar-info {
+    font-size: 13px;
+    color: #666;
+}
+.toolbar-info span {
+    margin-right: 12px;
+}
+.toolbar-info .theme-name {
+    background: #f5f5f5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+}
+.copy-btn {
+    padding: 10px 24px;
+    background: #07c160;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.copy-btn:hover { background: #06ae56; transform: translateY(-1px); }
+.copy-btn:active { transform: translateY(0); }
+.copy-btn.copied {
+    background: #34c759;
+}
+.phone-frame {
+    max-width: 415px;
+    margin: 76px auto 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.phone-header {
+    background: #ededed;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #999;
+    border-bottom: 1px solid #e0e0e0;
+}
+.article-content {
+    padding: 20px;
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 隐藏的纯微信 HTML，用于复制 */
+#wechatHtml {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 375px;          /* 限宽，避免子 section 撑到视口右边漏出色块 */
+    overflow: hidden;
+    visibility: hidden;    /* 复制时 JS 会临时恢复 visibility */
+    pointer-events: none;
+}
+/* ── Font Size Selector ── */
+.font-size-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px auto;
+    padding: 8px 0;
+    max-width: 415px;
+}
+.fs-label {
+    font-size: 13px;
+    color: #999;
+}
+.fs-btn {
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.fs-btn:hover {
+    border-color: #07C160;
+    color: #07C160;
+}
+.fs-btn.active {
+    background: #07C160;
+    border-color: #07C160;
+    color: #fff;
+}
+@media (max-width: 480px) {
+    .phone-frame {
+        margin: 60px 0 20px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .toolbar {
+        padding: 8px 12px;
+    }
+    .copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <div class="toolbar-info">
+            <span class="theme-name">报纸</span>
+            <span>1,423 字</span>
+        </div>
+    </div>
+    <button class="copy-btn" onclick="copyToWechat()">复制到微信</button>
+</div>
+
+<div class="font-size-selector">
+    <span class="fs-label">字号</span>
+    <button class="fs-btn active" data-size="15" onclick="switchFontSize(15)">15px</button>
+    <button class="fs-btn" data-size="16" onclick="switchFontSize(16)">16px</button>
+</div>
+
+<div class="phone-frame">
+    <div class="phone-header">微信公众号预览</div>
+    <div class="article-content" id="articleContent">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">线上 OOM 是最让人头疼的问题之一。服务器挂了、接口超时、用户过来说打不开页面了——而你连它在哪都还不知道。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">上个月我们线上就出了一次。不是什么高并发场景，就是一笔正常的支付回调，跑着跑着内存就爆了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这篇文章记录完整的排查过程：从告警收到、Heap Dump 导出、MAT 分析，到定位到具体代码行、修复、复盘。全程思路，不止工具。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">告警来了：内存使用率 95%</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">那天下午两点，告警群弹出消息：</p>
+<section data-role="blockquote" style="border-top:1px solid #d5cfc5;border-bottom:1px solid #d5cfc5;background:#f7f3ee;padding:18px 20px;border-radius:0;font-size:16px;color:#555555;line-height:1.7;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16">
+<p style="font-size:16px;color:#000000;line-height:1.7;margin-bottom:0;background:transparent">[告警] 支付服务 POD pay-svc-7f9b6c 内存使用率 95%</p>
+</section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">第一反应是流量突增。看了一眼监控——QPS 正常，和昨天差不多。那就不是流量的问题，大概率是内存泄漏。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">内存泄漏的特点就是：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">系统运行越久，内存占用越高，最终 OOM 被 kill</strong>。如果是流量高峰导致的内存飙升，降下来之后内存也会降。而内存泄漏不会。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我们看一下现在的内存情况：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;进&nbsp;POD</span><br>kubectl&nbsp;exec&nbsp;-it&nbsp;pay-svc-<span style="color:#b5cea8">7</span>f9b6c&nbsp;--&nbsp;sh<br><br>#&nbsp;看进程<br>ps&nbsp;aux&nbsp;--sort=-%mem&nbsp;|&nbsp;head&nbsp;-<span style="color:#b5cea8">5</span><br><br>#&nbsp;用&nbsp;jstat&nbsp;看堆内存<br>jstat&nbsp;-gcutil&nbsp;<span style="color:#b5cea8">1</span>&nbsp;<span style="color:#b5cea8">1000</span>&nbsp;<span style="color:#b5cea8">5</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">输出显示老年代（Old Gen）使用率已经 92%，而且 Full GC 的频率从正常的每小时一次变成了每 10 分钟一次——典型的内存泄漏信号。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">导出 Heap Dump</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">确认是内存泄漏后，第一步是导出堆转储文件。注意：生产环境导出 Heap Dump 会导致应用暂停（STW），要确认业务低峰期再做。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我们当时选了凌晨 2 点操作：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;先看进程&nbsp;PID</span><br>jps&nbsp;-l<br><br>#&nbsp;导出&nbsp;Heap&nbsp;Dump（PID&nbsp;<span style="color:#b5cea8">12345</span>）<br>jmap&nbsp;-dump:live,format=b,file=/tmp/heap-<span style="color:#b5cea8">20260618.</span>hprof&nbsp;<span style="color:#b5cea8">12345</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">-dump:live</code> 参数会先触发一次 Full GC，只保留存活对象，这样导出的文件更小、分析起来更容易。但这个操作本身也会 STW，大堆可能几十秒。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">导出完把文件拷出来：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">kubectl&nbsp;cp&nbsp;pay-svc-<span style="color:#b5cea8">7</span>f9b6c:/tmp/heap-<span style="color:#b5cea8">20260618.</span>hprof&nbsp;./heap-dump.hprof<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这个文件 800 多 MB，传了快两分钟。<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">建议先 gzip 再传</strong>，压缩率很好：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">gzip&nbsp;/tmp/heap-<span style="color:#b5cea8">20260618.</span>hprof<br>#&nbsp;<span style="color:#b5cea8">800</span>MB&nbsp;→&nbsp;<span style="color:#b5cea8">120</span>MB<br></code></pre></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">用 MAT 分析堆转储</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Heap Dump 拿到了，怎么分析？最常用的工具是 Eclipse MAT（Memory Analyzer Tool）。下载地址: https://eclipse.dev/mat/</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">也可以用命令行版（头大时用）:</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;安装&nbsp;MAT&nbsp;命令行版</span><br>brew&nbsp;install&nbsp;mat<br><br>#&nbsp;分析<br>ParseHeapDump.sh&nbsp;heap-dump.hprof<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">但我建议还是用 GUI——可视化的 Leak Suspects Report 能直接告诉你「最可能的问题在哪里」。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">导入 Heap Dump 后，MAT 会自动生成一份 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Leak Suspects Report</strong>，点开看：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">Problem&nbsp;Suspect&nbsp;1:<br>The&nbsp;class&nbsp;&quot;java.util.HashMap$Node&quot;&nbsp;loaded&nbsp;by&nbsp;&quot;system&nbsp;class&nbsp;loader&quot;<br>occupies&nbsp;387,418,968&nbsp;(45.6%)&nbsp;bytes&nbsp;of&nbsp;total&nbsp;heap.<br><br>The&nbsp;thread&nbsp;&quot;http-nio-8080-exec-15&quot;&nbsp;is&nbsp;at:<br>&nbsp;&nbsp;java.util.HashMap.putVal(HashMap.java:xxx)<br>&nbsp;&nbsp;com.dudu.pay.service.CallbackProcessor.saveCallback(CallbackProcessor.java:42)<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">45% 的堆被一个 HashMap 占了！点进去看详情，发现这个 HashMap 有 280 万个 entry，key 是 String 类型，value 是 CallbackRecord 对象。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">280 万个！正常的支付回调记录不应该留这么多在内存里，应该写进数据库后就释放引用。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">定位到代码</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">顺着 MAT 的指引，我打开了 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">CallbackProcessor.java</code>：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#c586c0">@Component</span><br>public&nbsp;<span style="color:#569cd6">class</span>&nbsp;CallbackProcessor&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;缓存所有未处理的回调记录</span><br>&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;Map&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CallbackRecord&gt;&nbsp;pendingCallbacks&nbsp;=&nbsp;<span style="color:#569cd6">new</span>&nbsp;HashMap&lt;&gt;();<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;saveCallback(<span style="color:#4ec9b0">String</span>&nbsp;orderId,&nbsp;CallbackRecord&nbsp;record)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pendingCallbacks.put(orderId,&nbsp;record);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;写数据库</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;callbackRepository.save(record);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;processCallback(<span style="color:#4ec9b0">String</span>&nbsp;orderId)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CallbackRecord&nbsp;record&nbsp;=&nbsp;pendingCallbacks.get(orderId);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">if</span>&nbsp;(record&nbsp;!=&nbsp;<span style="color:#569cd6">null</span>&nbsp;&amp;&amp;&nbsp;record.isProcessed())&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;处理完成，但！没有&nbsp;remove！</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;pendingCallbacks.remove(orderId);&nbsp;&nbsp;//&nbsp;这一行被注释掉了</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">看到没？<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">processCallback</code> 方法处理完回调记录后，应该从 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">pendingCallbacks</code> 里 remove 掉，但对应的代码被注释了。我查了 git blame——是两周前一次重构时，同事不小心把这一行删了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">结果就是：每笔支付回调都往 HashMap 里 put，但永远不 remove。运行两周，280 万条记录，堆撑爆。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">修复就一行：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">public&nbsp;<span style="color:#569cd6">void</span>&nbsp;processCallback(<span style="color:#4ec9b0">String</span>&nbsp;orderId)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;CallbackRecord&nbsp;record&nbsp;=&nbsp;pendingCallbacks.get(orderId);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">if</span>&nbsp;(record&nbsp;!=&nbsp;<span style="color:#569cd6">null</span>&nbsp;&amp;&amp;&nbsp;record.isProcessed())&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pendingCallbacks.remove(orderId);&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;加上这一行</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;后续处理逻辑...</span><br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">但即便是修好了，这个设计也有问题——HashMap 作为缓存，万一处理失败永远不 remove，还是会泄漏。更好的做法是<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">换用 Guava Cache 或 Caffeine，设置最大容量和过期时间</strong>：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">LoadingCache&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CallbackRecord&gt;&nbsp;pendingCallbacks&nbsp;=&nbsp;Caffeine.newBuilder()<br>&nbsp;&nbsp;&nbsp;&nbsp;.maximumSize(<span style="color:#b5cea8">10000</span>)<br>&nbsp;&nbsp;&nbsp;&nbsp;.expireAfterWrite(<span style="color:#b5cea8">30</span>,&nbsp;TimeUnit.MINUTES)<br>&nbsp;&nbsp;&nbsp;&nbsp;.build(key&nbsp;-&gt;&nbsp;callbackRepository.findById(key));<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这样就算漏了 remove，缓存也会自动过期淘汰，不会撑爆内存。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">修完上线，观察指标</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">修复后灰度上线，观察三件事：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">老年代使用率</strong>：应该从 92% 缓慢下降，稳定在 30-40%</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Full GC 频率</strong>：应该从每 10 分钟恢复到每小时 1 次</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">3</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">pendingCallbacks</code> 数量</strong>：可以通过 Arthas 或 JMX 监控，应该稳定在几百</span></section></section>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;Arthas&nbsp;看&nbsp;Map&nbsp;大小</span><br>ognl&nbsp;-c&nbsp;com.dudu.pay.service&nbsp;<span style="color:#ce9178">'<span style="color:#c586c0">@callbackProcessor</span><span style="color:#c586c0">@pendingCallbacks</span>.size()'</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">观察了 24 小时，老年代稳定在 35%，Full GC 每 50 分钟一次，恢复正常。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">复盘：为什么这个 Bug 活了两周？</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">几个原因叠加：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">代码 Review 不够细</strong>：重构 PR 删了一行代码，reviewer 没注意到。养成习惯：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">删了 put 的地方检查有没有对应的 remove</strong></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">没有自动化检测</strong>：没有加 Pod 内存水位线告警的自动化触发。如果内存 80% 时自动 dump 一份堆，发现能提前两周</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">HashMap 当缓存用</strong>是最常见的内存泄漏模式之一。工具推荐：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">AliJava 规约插件</strong>能扫出这类问题</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">我的建议：</strong><br />
+1. 所有 Map<String, X> 类型的类成员变量，上线前问自己「这个 Map 会有多大？什么时候清理？」<br />
+2. Caffeine 代替 HashMap 做缓存，强制设置上限<br />
+3. MAT 分析不是学会了才用，是遇到问题再学——先把 MAT 下载好，省得到时候手忙脚乱</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px">
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">📌 本文是「线上问题排查」系列第 2 篇。下一篇聊：一次诡异的 Connection Reset 排查——从网络层到应用层，一层层剥开。</p></section>
+    </div>
+</div>
+
+<!-- 隐藏区域：存放纯微信 HTML（不含预览壳样式），复制时用这个 -->
+<div id="wechatHtml">
+<section style="background-color:#ffffff;padding:16px" data-darkmode-bgcolor="#1a1712"><p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">线上 OOM 是最让人头疼的问题之一。服务器挂了、接口超时、用户过来说打不开页面了——而你连它在哪都还不知道。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">上个月我们线上就出了一次。不是什么高并发场景，就是一笔正常的支付回调，跑着跑着内存就爆了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这篇文章记录完整的排查过程：从告警收到、Heap Dump 导出、MAT 分析，到定位到具体代码行、修复、复盘。全程思路，不止工具。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">告警来了：内存使用率 95%</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">那天下午两点，告警群弹出消息：</p>
+<section data-role="blockquote" style="border-top:1px solid #d5cfc5;border-bottom:1px solid #d5cfc5;background:#f7f3ee;padding:18px 20px;border-radius:0;font-size:16px;color:#555555;line-height:1.7;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16">
+<p style="font-size:16px;color:#000000;line-height:1.7;margin-bottom:0;background:transparent">[告警] 支付服务 POD pay-svc-7f9b6c 内存使用率 95%</p>
+</section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">第一反应是流量突增。看了一眼监控——QPS 正常，和昨天差不多。那就不是流量的问题，大概率是内存泄漏。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">内存泄漏的特点就是：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">系统运行越久，内存占用越高，最终 OOM 被 kill</strong>。如果是流量高峰导致的内存飙升，降下来之后内存也会降。而内存泄漏不会。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我们看一下现在的内存情况：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;进&nbsp;POD</span><br>kubectl&nbsp;exec&nbsp;-it&nbsp;pay-svc-<span style="color:#b5cea8">7</span>f9b6c&nbsp;--&nbsp;sh<br><br>#&nbsp;看进程<br>ps&nbsp;aux&nbsp;--sort=-%mem&nbsp;|&nbsp;head&nbsp;-<span style="color:#b5cea8">5</span><br><br>#&nbsp;用&nbsp;jstat&nbsp;看堆内存<br>jstat&nbsp;-gcutil&nbsp;<span style="color:#b5cea8">1</span>&nbsp;<span style="color:#b5cea8">1000</span>&nbsp;<span style="color:#b5cea8">5</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">输出显示老年代（Old Gen）使用率已经 92%，而且 Full GC 的频率从正常的每小时一次变成了每 10 分钟一次——典型的内存泄漏信号。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">导出 Heap Dump</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">确认是内存泄漏后，第一步是导出堆转储文件。注意：生产环境导出 Heap Dump 会导致应用暂停（STW），要确认业务低峰期再做。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">我们当时选了凌晨 2 点操作：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;先看进程&nbsp;PID</span><br>jps&nbsp;-l<br><br>#&nbsp;导出&nbsp;Heap&nbsp;Dump（PID&nbsp;<span style="color:#b5cea8">12345</span>）<br>jmap&nbsp;-dump:live,format=b,file=/tmp/heap-<span style="color:#b5cea8">20260618.</span>hprof&nbsp;<span style="color:#b5cea8">12345</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">-dump:live</code> 参数会先触发一次 Full GC，只保留存活对象，这样导出的文件更小、分析起来更容易。但这个操作本身也会 STW，大堆可能几十秒。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">导出完把文件拷出来：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">kubectl&nbsp;cp&nbsp;pay-svc-<span style="color:#b5cea8">7</span>f9b6c:/tmp/heap-<span style="color:#b5cea8">20260618.</span>hprof&nbsp;./heap-dump.hprof<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这个文件 800 多 MB，传了快两分钟。<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">建议先 gzip 再传</strong>，压缩率很好：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">gzip&nbsp;/tmp/heap-<span style="color:#b5cea8">20260618.</span>hprof<br>#&nbsp;<span style="color:#b5cea8">800</span>MB&nbsp;→&nbsp;<span style="color:#b5cea8">120</span>MB<br></code></pre></section>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">用 MAT 分析堆转储</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">Heap Dump 拿到了，怎么分析？最常用的工具是 Eclipse MAT（Memory Analyzer Tool）。下载地址: https://eclipse.dev/mat/</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">也可以用命令行版（头大时用）:</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;安装&nbsp;MAT&nbsp;命令行版</span><br>brew&nbsp;install&nbsp;mat<br><br>#&nbsp;分析<br>ParseHeapDump.sh&nbsp;heap-dump.hprof<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">但我建议还是用 GUI——可视化的 Leak Suspects Report 能直接告诉你「最可能的问题在哪里」。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">导入 Heap Dump 后，MAT 会自动生成一份 <strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Leak Suspects Report</strong>，点开看：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">Problem&nbsp;Suspect&nbsp;1:<br>The&nbsp;class&nbsp;&quot;java.util.HashMap$Node&quot;&nbsp;loaded&nbsp;by&nbsp;&quot;system&nbsp;class&nbsp;loader&quot;<br>occupies&nbsp;387,418,968&nbsp;(45.6%)&nbsp;bytes&nbsp;of&nbsp;total&nbsp;heap.<br><br>The&nbsp;thread&nbsp;&quot;http-nio-8080-exec-15&quot;&nbsp;is&nbsp;at:<br>&nbsp;&nbsp;java.util.HashMap.putVal(HashMap.java:xxx)<br>&nbsp;&nbsp;com.dudu.pay.service.CallbackProcessor.saveCallback(CallbackProcessor.java:42)<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">45% 的堆被一个 HashMap 占了！点进去看详情，发现这个 HashMap 有 280 万个 entry，key 是 String 类型，value 是 CallbackRecord 对象。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">280 万个！正常的支付回调记录不应该留这么多在内存里，应该写进数据库后就释放引用。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">定位到代码</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">顺着 MAT 的指引，我打开了 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">CallbackProcessor.java</code>：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#c586c0">@Component</span><br>public&nbsp;<span style="color:#569cd6">class</span>&nbsp;CallbackProcessor&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;缓存所有未处理的回调记录</span><br>&nbsp;&nbsp;&nbsp;&nbsp;private&nbsp;Map&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CallbackRecord&gt;&nbsp;pendingCallbacks&nbsp;=&nbsp;<span style="color:#569cd6">new</span>&nbsp;HashMap&lt;&gt;();<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;saveCallback(<span style="color:#4ec9b0">String</span>&nbsp;orderId,&nbsp;CallbackRecord&nbsp;record)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pendingCallbacks.put(orderId,&nbsp;record);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;写数据库</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;callbackRepository.save(record);<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;&nbsp;&nbsp;public&nbsp;<span style="color:#569cd6">void</span>&nbsp;processCallback(<span style="color:#4ec9b0">String</span>&nbsp;orderId)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CallbackRecord&nbsp;record&nbsp;=&nbsp;pendingCallbacks.get(orderId);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">if</span>&nbsp;(record&nbsp;!=&nbsp;<span style="color:#569cd6">null</span>&nbsp;&amp;&amp;&nbsp;record.isProcessed())&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;处理完成，但！没有&nbsp;remove！</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;pendingCallbacks.remove(orderId);&nbsp;&nbsp;//&nbsp;这一行被注释掉了</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">看到没？<code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">processCallback</code> 方法处理完回调记录后，应该从 <code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">pendingCallbacks</code> 里 remove 掉，但对应的代码被注释了。我查了 git blame——是两周前一次重构时，同事不小心把这一行删了。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">结果就是：每笔支付回调都往 HashMap 里 put，但永远不 remove。运行两周，280 万条记录，堆撑爆。</p>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">修复就一行：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">public&nbsp;<span style="color:#569cd6">void</span>&nbsp;processCallback(<span style="color:#4ec9b0">String</span>&nbsp;orderId)&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;CallbackRecord&nbsp;record&nbsp;=&nbsp;pendingCallbacks.get(orderId);<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6">if</span>&nbsp;(record&nbsp;!=&nbsp;<span style="color:#569cd6">null</span>&nbsp;&amp;&amp;&nbsp;record.isProcessed())&nbsp;{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pendingCallbacks.remove(orderId);&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;加上这一行</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6a9955">//&nbsp;后续处理逻辑...</span><br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">但即便是修好了，这个设计也有问题——HashMap 作为缓存，万一处理失败永远不 remove，还是会泄漏。更好的做法是<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">换用 Guava Cache 或 Caffeine，设置最大容量和过期时间</strong>：</p>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9">LoadingCache&lt;<span style="color:#4ec9b0">String</span>,&nbsp;CallbackRecord&gt;&nbsp;pendingCallbacks&nbsp;=&nbsp;Caffeine.newBuilder()<br>&nbsp;&nbsp;&nbsp;&nbsp;.maximumSize(<span style="color:#b5cea8">10000</span>)<br>&nbsp;&nbsp;&nbsp;&nbsp;.expireAfterWrite(<span style="color:#b5cea8">30</span>,&nbsp;TimeUnit.MINUTES)<br>&nbsp;&nbsp;&nbsp;&nbsp;.build(key&nbsp;-&gt;&nbsp;callbackRepository.findById(key));<br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">这样就算漏了 remove，缓存也会自动过期淘汰，不会撑爆内存。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">修完上线，观察指标</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">修复后灰度上线，观察三件事：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">1</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">老年代使用率</strong>：应该从 92% 缓慢下降，稳定在 30-40%</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">2</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">Full GC 频率</strong>：应该从每 10 分钟恢复到每小时 1 次</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:22px;background:#f0ede8;color:#326891;border-radius:50%;font-size:13px;font-weight:bold;margin-right:10px;margin-top:4px" data-darkmode-bgcolor="#2a2720">3</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060"><code style="background:#f0ede8;padding:3px 6px;border-radius:4px;font-size:12px;color:#326891;font-family:'SF Mono', Consolas, monospace;word-break:break-all">pendingCallbacks</code> 数量</strong>：可以通过 Arthas 或 JMX 监控，应该稳定在几百</span></section></section>
+<section style="background:#f0ede8;border-radius:8px;overflow:hidden;margin:24px 0 24px" data-darkmode-bgcolor="#1e1b16"><section style="display:flex;align-items:center;height:36px;padding:0 12px;background:#e5e0d8" data-darkmode-bgcolor="#141210"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FF5F56"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#FFBD2E"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;background:#27C93F"></span></section><pre style="background:#f0ede8;color:#326891;padding:20px;border-radius:0;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;word-break:break-all;margin:0 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:pre"><code style="background:none;padding:0;color:#326891;font-size:12px;font-family:'SF Mono', Consolas, monospace" data-darkmode-color="#7fa8c9"><span style="color:#6a9955">#&nbsp;Arthas&nbsp;看&nbsp;Map&nbsp;大小</span><br>ognl&nbsp;-c&nbsp;com.dudu.pay.service&nbsp;<span style="color:#ce9178">'<span style="color:#c586c0">@callbackProcessor</span><span style="color:#c586c0">@pendingCallbacks</span>.size()'</span><br></code></pre></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">观察了 24 小时，老年代稳定在 35%，Full GC 每 50 分钟一次，恢复正常。</p>
+<h2 style="font-size:19px;font-weight:700;color:#111111;line-height:1.5;text-transform:uppercase;letter-spacing:0.12em;text-align:center;padding:10px 0;border-top:1px solid rgba(17,17,17,0.85);border-bottom:1px solid rgba(17,17,17,0.85);margin:38px 0 18px" data-darkmode-color="#e0dcd4">复盘：为什么这个 Bug 活了两周？</h2>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">几个原因叠加：</p>
+<section style="margin:16px 0 16px"><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">代码 Review 不够细</strong>：重构 PR 删了一行代码，reviewer 没注意到。养成习惯：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">删了 put 的地方检查有没有对应的 remove</strong></span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">没有自动化检测</strong>：没有加 Pod 内存水位线告警的自动化触发。如果内存 80% 时自动 dump 一份堆，发现能提前两周</span></section><section style="display:flex;margin-bottom:8px;align-items:flex-start"><span style="color:#326891;margin-right:8px;font-weight:bold">•</span><span style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">HashMap 当缓存用</strong>是最常见的内存泄漏模式之一。工具推荐：<strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">AliJava 规约插件</strong>能扫出这类问题</span></section></section>
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8"><strong style="font-weight:700;color:#111111;background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 62%, rgba(50,104,145,0.1) 62%, rgba(50,104,145,0.1) 100%);display:inline" data-darkmode-color="#e0a060">我的建议：</strong><br />
+1. 所有 Map<String, X> 类型的类成员变量，上线前问自己「这个 Map 会有多大？什么时候清理？」<br />
+2. Caffeine 代替 HashMap 做缓存，强制设置上限<br />
+3. MAT 分析不是学会了才用，是遇到问题再学——先把 MAT 下载好，省得到时候手忙脚乱</p>
+<hr style="height:1px;background:linear-gradient(90deg, rgba(213,207,197,0) 0%, rgba(17,17,17,0.9) 26%, rgba(17,17,17,0.9) 74%, rgba(213,207,197,0) 100%);border:none;width:38%;margin:40px auto 40px">
+<p style="font-size:16px;color:#000000;line-height:1.75;letter-spacing:0.5px;text-align:justify;margin:0 0 18px" data-darkmode-color="#c8c8c8">📌 本文是「线上问题排查」系列第 2 篇。下一篇聊：一次诡异的 Connection Reset 排查——从网络层到应用层，一层层剥开。</p></section>
+</div>
+
+<script>
+function switchFontSize(size) {
+    // 更新按钮状态
+    document.querySelectorAll('.fs-btn').forEach(function(btn) {
+        if (parseInt(btn.dataset.size) === size) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 修改可见预览区和隐藏复制区的 p 标签
+    ['articleContent', 'wechatHtml'].forEach(function(id) {
+        var container = document.getElementById(id);
+        if (!container) return;
+        container.querySelectorAll('p').forEach(function(p) {
+            var currentSize = parseInt(window.getComputedStyle(p).fontSize);
+            if (currentSize >= 14 && currentSize <= 16) {
+                p.style.fontSize = size + 'px';
+                p.style.lineHeight = size === 16 ? '1.75' : '1.8';
+            }
+        });
+        // 修改列表项文字
+        container.querySelectorAll('[style*="font-size:15px"]').forEach(function(el) {
+            if (el.tagName === 'SPAN' || el.tagName === 'SECTION') {
+                el.style.fontSize = size + 'px';
+            }
+        });
+    });
+
+    // 保存选择到 localStorage
+    localStorage.setItem('wechat-format-fontsize', size);
+}
+
+// 页面加载时恢复上次选择
+document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('wechat-format-fontsize');
+    if (saved && saved !== '15') {
+        switchFontSize(parseInt(saved));
+    }
+});
+
+function copyToWechat() {
+    const source = document.getElementById('wechatHtml');
+    const range = document.createRange();
+    range.selectNodeContents(source);
+
+    // 临时让元素可见（否则某些浏览器不允许复制隐藏元素）
+    source.style.position = 'fixed';
+    source.style.left = '0';
+    source.style.top = '0';
+    source.style.opacity = '0.01';
+    source.style.width = '375px';
+    source.style.visibility = 'visible';
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '已复制!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = '复制到微信';
+            btn.classList.remove('copied');
+        }, 2500);
+    } catch(e) {
+        // fallback: 尝试 Clipboard API
+        const html = source.innerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制到微信';
+                btn.classList.remove('copied');
+            }, 2500);
+        }).catch(() => {
+            alert('复制失败，请手动选中文章内容复制');
+        });
+    }
+
+    // 恢复隐藏
+    source.style.position = 'absolute';
+    source.style.left = '-9999px';
+    source.style.top = '-9999px';
+    source.style.opacity = '';
+    source.style.width = '';
+    source.style.visibility = 'hidden';
+
+    sel.removeAllRanges();
+}
+</script>
+</body>
+</html>

@@ -37,23 +37,41 @@ def get_existing():
             written.add((sn.group(1), int(no.group(1))))
     return written
 
-def extract_keyword(title):
-    """从标题提取短关键词给 slug（5-10 字，取主题关键词）。"""
-    # Remove series prefix: "面向面试之 Redis 系列七（番外）：" or similar
+def extract_keyword(title, keywords_str=""):
+    """从标题或关键词列提取短英文关键词给 slug（纯英文，5-10 字符）。"""
+    # Priority: use first English keyword from keywords column
+    if keywords_str:
+        # Split by common delimiters
+        for kw in re.split(r'[,，、;；]\s*', keywords_str):
+            kw = kw.strip()
+            # Check if it's pure ASCII (English)
+            if re.match(r'^[a-zA-Z][a-zA-Z0-9\s\-+.#]+$', kw):
+                kw = kw.lower().replace(' ', '-').replace('+', '-plus')
+                # Remove special chars, keep only alphanumeric + hyphens
+                kw = re.sub(r'[^a-z0-9-]', '', kw)
+                # Truncate but keep meaningful words
+                parts = kw.split('-')
+                if len(parts) > 4:
+                    kw = '-'.join(parts[:4])
+                return kw[:30] if len(kw) > 30 else kw
+    
+    # Fallback: extract from title
     t = re.sub(r'^.*?系列[N\d一二三四五六七八九十]+（番外）[：:]', '', title)
     t = re.sub(r'^.*?系列[N\d一二三四五六七八九十]+[：:]', '', t)
-    # Remove subtitle after ——
     t = re.sub(r'[——\-–——].*$', '', t)
-    # Remove brackets content
     t = re.sub(r'[（(][^）)]*[）)]', '', t)
     t = t.strip()
-    # Keep only Chinese chars, max 8
+    # Extract English words if any
+    eng_words = re.findall(r'[a-zA-Z][a-zA-Z0-9+#]+', t)
+    if eng_words:
+        return '-'.join(w.lower() for w in eng_words[:3])
+    # Last resort: pinyin-like simplification
     t = re.sub(r'[^\u4e00-\u9fff]', '', t)
     return t[:8]
 
-def make_slug(series_name, num, title):
+def make_slug(series_name, num, title, keywords=""):
     prefix = SERIES_SLUG_PREFIX.get(series_name, 'post')
-    kw = extract_keyword(title)
+    kw = extract_keyword(title, keywords)
     return f'{prefix}-{num}-{kw}'
 
 def main():
@@ -118,7 +136,7 @@ def main():
             if (series_key, num) in written:
                 continue
             
-            slug = make_slug(series_key, num, title)
+            slug = make_slug(series_key, num, title, keywords)
             
             candidates.append({
                 'priority_rank': priority_order.get(priority, 99),

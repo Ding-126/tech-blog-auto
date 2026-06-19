@@ -4,5 +4,6 @@
   "redis-data-types-advanced-usage",
   "cpu-100-arthas-troubleshoot",
   "troubleshoot-1-cpu-100-arthas",
-  "troubleshoot-2-内存泄漏"
+  "troubleshoot-2-内存泄漏",
+  "troubleshoot-2-oom"
 ]
