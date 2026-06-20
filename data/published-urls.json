@@ -82,5 +82,11 @@
     "title": "线上问题排查系列二：Java 内存泄漏——从堆转储到源码修复，完整记录",
     "post": "content/posts/troubleshoot-2-oom.md",
     "published_at": "2026-06-19T13:31:31.732519+08:00"
+  },
+  {
+    "url": "https://blog.dudu.dev/posts/troubleshoot-3-full-gc",
+    "title": "线上问题排查系列三：一次 Full GC 引发的\\",
+    "post": "content/posts/troubleshoot-3-full-gc.md",
+    "published_at": "2026-06-20T09:36:52.646440+08:00"
   }
 ]

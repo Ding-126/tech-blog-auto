@@ -1,123 +1,171 @@
----
-title: "线上问题排查系列三：一次 Full GC 引发的\"血案\"——GC 日志分析实战"
-slug: "troubleshoot-3-full-gc"
-date: 2026-06-20
-draft: false
-categories: ["tutorial"]
-tags: ["Full GC", "GC 日志", "G1"]
-keywords: ["Full GC", "GC 日志", "G1"]
-difficulty: "实战"
-target_length: 2500
-series_name: "线上问题排查"
-series_number: 3
-series_total: 5
----
++++
+title = "线上问题排查系列三：一次 Full GC 引发的\"血案\"——GC 日志分析实战"
+slug = "troubleshoot-3-full-gc"
+date = 2026-06-20
+draft = false
+categories = ["tutorial"]
+tags = ["Full GC", "GC 日志", "G1"]
+difficulty = "实战"
+target_length = 2500
+series_name = "线上问题排查"
+series_number = 3
+series_total = 5
+source_url = "https://blog.dudu.dev/posts/troubleshoot-3-full-gc"
++++
 
-上周五下午，我正在摸鱼写周报，群里突然炸了——"订单超时了！""用户进不去页面了！" 我心想完蛋，又得加班了。
+又是个周五傍晚，正准备下班，告警群又响了。
 
-上机器一看，好家伙，CPU 直接飙到 300%，所有接口响应时间都在 5 秒以上。第一反应是看堆内存，`jstat -gcutil` 打出来一看：Full GC 次数在疯狂增长，几乎每秒一次。
+> [告警] 订单服务 POD order-svc-5d4f8a 响应延迟 P99 从 20ms 飙升到 5.8s
 
-如果你遇到过类似的情况，这篇文章应该能帮你省下至少一下午的排查时间。
+5.8 秒的 P99，用户早就超时重试了。赶紧看监控——CPU 不高，内存不高，但 GC 活动曲线像心电图骤停一样——Full GC 每 30 秒一次。
 
-<!--more-->
+这篇文章记录一次 Full GC 导致服务抖动的完整排查过程：从 GC 日志看不懂到逐行分析，找到根因，修复上线。
 
-## 拿到 GC 日志是第一件事
+## 第一步：开 GC 日志
 
-很多同学遇到 Full GC 第一反应是"加内存"或者"调大堆"。先别急，加内存只是延缓症状，真正要治本你得先看 GC 日志。
-
-线上 JVM 启动参数里，把这几行加上：
-
-```
--XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps
--Xloggc:/var/log/gc/gc-%t.log -XX:+UseGCLogFileRotation
--XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M
-```
-
-我们线上用的 G1 垃圾回收器，所以还加了 `-XX:+PrintAdaptiveSizePolicy` 来观察 G1 的区域分配情况。
-
-拿到日志之后，别傻看，先 grep 一下 Full GC 出现的频率：
+发现 Full GC 频繁的第一件事：确认 GC 日志打开了。如果没开，动态打开：
 
 ```bash
-grep "Full GC" gc-*.log | wc -l
+# 查看当前 JVM 是否开了 GC 日志
+jcmd 12345 VM.command_line | grep -i gc
+
+# 如果没开，动态开启（JDK 11+）
+jcmd 12345 VM.log output=gc.log
 ```
 
-我那次看到的结果是：**半小时内 1800+ 次 Full GC**，平均每秒一次。这不是垃圾回收，这是在自杀。
+我们当时 JDK 11 默认开了，文件在 `logs/gc.log`。看一眼：
 
-## 第一眼看停顿时间
-
-GC 日志里最核心的两个指标：**频率**和**停顿时间**。
-
-```
-2026-06-17T14:23:15.123+0800: 4321.456: [Full GC (Allocation Failure)  8G->6G(16G), 12.345 secs]
+```bash
+# 先看最后 50 行
+tail -50 logs/gc.log
 ```
 
-上面这一行信息量很大：
-
-- **Allocation Failure** — 分配失败触发的 Full GC，说明堆里确实没空间了
-- **8G->6G** — 回收了 2G，但还剩 6G
-- **12.345 secs** — STW 停了 12 秒
-
-12 秒的停顿，意味着这段时间内应用完全不可用。如果是支付接口，这就直接超时了。我当时盯着这个数字整个人都不好了——因为我们的接口超时配的是 3 秒。
-
-**个人经验**：看 GC 停顿时间不要只看平均，要看 P99。G1 的目标停顿是 200ms，如果你的 Full GC 动不动就 5 秒以上，说明问题已经非常严重了，不是调个参数能解决的。
-
-## G1 日志里藏着真凶
-
-G1 的 Full GC 日志和 CMS/Parallel 不太一样。G1 的 Full GC 是单线程串行回收，效率很低。如果你看到 G1 频繁 Full GC，通常不是堆太小，而是**产生了大量无法回收的大对象**。
-
-看这一行：
+输出大概长这样（简化版）：
 
 ```
-2026-06-17T14:23:27.456+0800: 4333.789: [Full GC (Metadata GC Threshold) ...]
+[2026-06-18T17:32:15.123+0800] GC pause (G1 Evacuation Pause) young 32M->8M(512M) 15ms
+[2026-06-18T17:32:45.456+0800] GC pause (G1 Evacuation Pause) young 28M->6M(512M) 12ms
+[2026-06-18T17:33:15.789+0800] GC pause (G1 Humongous Allocation) young 18M->12M(512M) 25ms
+[2026-06-18T17:33:45.012+0800] GC pause (G1 Evacuation Pause) young 36M->18M(512M) 580ms  ← 变慢了
+[2026-06-18T17:34:15.345+0800] GC pause (Initial Mark) 18M->28M(512M) 320ms
+[2026-06-18T17:34:16.789+0800] GC pause (G1 Evacuation Pause) young 42M->30M(512M) 1550ms ← 越来越慢
+[2026-06-18T17:34:45.123+0800] GC pause (G1 Evacuation Pause) young 58M->42M(512M) 2800ms
+[2026-06-18T17:35:15.456+0800] GC pause (G1 Evacuation Pause) young 72M->58M(512M) 4500ms
+[2026-06-18T17:35:45.789+0800] GC pause (Full) 512M->180M(512M) 8200ms  ← Full GC 来了
 ```
 
-注意括号里是 `Metadata GC Threshold` 而不是 `Allocation Failure`。这说明触发 Full GC 的原因是**元空间（Metaspace）不够了**。
+看趋势：Young GC 的停顿时间从 15ms → 580ms → 2.8s → 4.5s，最后触发 Full GC。每次 Young GC 后存活对象越来越大（8M→18M→30M→42M→58M），说明有对象一直在逃逸，升到老年代了。
 
-我当时排查的流程：
+## 第二步：用工具分析 GC 日志
 
-1. `jstat -gcmetacapacity <pid>` 看元空间使用情况
-2. 发现 Metaspace 一直在涨，从 256M 涨到了 1.2G 还没停
-3. 用 `jmap -clstats <pid>` 看类加载器信息
-4. 发现有大量的 GroovyClassLoader 实例
+裸眼看 GC 日志太难了，上工具：
 
-破案了——业务方用 Groovy 做动态规则引擎，每次新规则都编译一个新类，但 GroovyClassLoader 没有正确的释放，导致 Metaspace 持续增长。
+**GCeasy（在线，推荐）**：https://gceasy.io — 上传 gc.log，自动出报告
+**GCViewer（本地）**：`brew install gcviewer` 然后 `gcviewer gc.log`
 
-## 工具比你想的有用
+我那次用的 GCeasy，上传后给的报告关键信息：
 
-别只会用 `jstat`，这几个组合拳很实用：
+```
+总吞吐量: 92%（正常应 > 99%）
+Full GC 次数: 12 次 / 小时
+Full GC 平均停顿: 6.2s
+老年代增长速率: 18MB/次 GC 周期
+```
 
-| 工具 | 用途 |
-|------|------|
-| `jstat -gcutil` | 快速查看 GC 各代使用率和次数 |
-| `jstat -gccause` | 查看最近一次 GC 的原因 |
-| `jmap -dump:live,format=b,file=heap.hprof` | 堆转储（谨慎使用，会 STW） |
-| `jcmd <pid> GC.heap_info` | G1 各区域分布 |
+最关键的是第三条——**每次 GC 周期老年代增加 18MB**。这说明有对象从 Young 逃逸到 Old，而且不被回收。结合 Young GC 后存活对象持续上升，结论是：**有对象在 leak**。
 
-**注意**：线上千万别随便 `jmap -dump` 不加 `:live`，不加的话全堆都 dump，文件巨大，还会卡死应用。我吃过这个亏，dump 了一个 32G 的堆文件，传输花了一小时，最后本地 MAT 直接 OOM 了。
+## 第三步：定位问题对象
 
-如果 G1 频繁 Full GC 是因为 Metaspace，用 `jcmd <pid> GC.class_stats` 看哪些类加载最多，比 `jmap -clstats` 更精细。
+GC 日志告诉你了「有什么问题」，但没告诉「是谁的问题」。得结合堆转储。
 
-## 我怎么解决的那次问题
+加 `-XX:+HeapDumpBeforeFullGC` 参数，下次 Full GC 前会自动 dump：
 
-找到了问题是 GroovyClassLoader 泄漏，解决方法反而很简单：
+```bash
+# 动态加参数
+jcmd 12345 GC.heap_dump /tmp/pre-full-gc.hprof
+```
 
-1. **限制 Metaspace 大小**：`-XX:MaxMetaspaceSize=256m`，让问题提前暴露而不是等到 1.2G 才出问题
-2. **缓存 GroovyClassLoader 实例**：按规则 md5 做 key，相同规则复用同一个 loader
-3. **添加定时清理**：每天凌晨低峰期卸载过期的 GroovyShell 实例
+拿到 dump 后用 MAT 打开，看 **支配树（Dominator Tree）**：
 
-改完之后，Full GC 从每秒一次降到了**每 3 小时一次**，P99 响应时间从 8 秒降到 120ms。
+```
+Class: com.dudu.order.service.OrderCacheService$CacheEntry
+Shallow Heap: 1.2MB
+Retained Heap: 342MB
+```
 
-**另一个坑**：我还发现业务方在循环里创建 `ScriptEngine` 做规则校验，每次 new 一个。这种代码不管 GC 怎么优化都没用，只能改代码。所以遇到频繁 Full GC，先查代码再说，别上来就调 JVM 参数。
+一个 `CacheEntry` 类保留了 342MB！进去看：
 
-## 总结
+```java
+@Component
+public class OrderCacheService {
+    // 本地缓存
+    private Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
-Full GC 排查其实就三步：
+    @Scheduled(fixedDelay = 3600000) // 每小时清理一次
+    public void cleanup() {
+        // 只清理了过期超过 1 天的
+        cache.entrySet().removeIf(e -> e.getValue().isExpired(24, TimeUnit.HOURS));
+    }
+}
+```
 
-1. **打开 GC 日志**（没有日志就是盲人摸象）
-2. **看频率和停顿时间**（判断严重程度）
-3. **找到根因**（大多数时候是代码问题，不是 JVM 参数问题）
+看到问题了吗？`cleanup()` 每小时执行一次，但只清理过期超过 24 小时的 entry。而系统每小时产生约 5 万条订单缓存，都往这个 Map 里塞。24 小时就是 120 万条，等于 342MB，老年代根本扛不住。
 
-G1 的 Full GC 是最后的保底机制，它的出现说明正常的 Young GC 和 Concurrent Marking 已经解决不了了。遇到它别慌，一步步排查就好。
+修复方案很简单——缩短过期时间：
 
-📌 本文是「线上问题排查」系列第 3 篇，共 5 篇。下一篇将分享 CPU 高负载的排查思路和常用工具。
+```java
+@Scheduled(fixedDelay = 600000) // 每 10 分钟清理一次
+public void cleanup() {
+    // 只保留最近 30 分钟的缓存
+    cache.entrySet().removeIf(e -> e.getValue().isExpired(30, TimeUnit.MINUTES));
+}
+```
 
+## 第四步：上线验证
+
+修完上线，观察 GC 日志：
+
+```bash
+# 用 jstat 实时看
+jstat -gcutil 12345 2000 10
+ S0  S1  E   O   M  YGC  YGCT  FGC  FGCT
+ 0.00 0.00 12.3 35.2 87.5 1248 28.5 12  72.3  ← 修复前
+ 0.00 0.00 8.2  28.5 87.3 1258 12.3 0   0.0   ← 修复后 1 小时
+```
+
+看 `FGC` 列：从 12 次降到 0 次。`FGCT`（Full GC 总耗时）从 72.3s 归零。老年代 `O` 从 35% 降到 28% 并稳定。
+
+再跑一遍 GCeasy 报告：吞吐量 99.8%，Full GC 0 次，正常了。
+
+## 用脚本快速分析 GC 日志
+
+排查多了可以写个简单脚本，下次秒出结论：
+
+```bash
+#!/bin/bash
+# gc-quick-check.sh — 快速分析 GC 日志
+LOG=$1
+echo "=== GC 日志快速分析 ==="
+echo "总行数: $(wc -l < $LOG)"
+echo "Full GC 次数: $(grep -c 'Full' $LOG)"
+echo "Young GC 次数: $(grep -c 'GC pause' $LOG)"
+echo "平均停顿: $(grep 'GC pause' $LOG | awk '{print $NF}' | sed 's/ms//' | awk '{s+=$1;c++} END{print s/c \"ms\"}')"
+echo "最大停顿: $(grep 'GC pause' $LOG | awk '{print $NF}' | sed 's/ms//' | sort -n | tail -1)ms"
+```
+
+存到服务器上，下次告警来了一条命令出报告，省得每次都人肉翻日志。
+
+## 复盘的三个教训
+
+1. **定时任务不等于 cleanup——得设合理的 TTL**。`@Scheduled` + Map 做缓存，最容易被忽视的内存泄漏模式。规约：所有 Map 缓存必须设上限，没有上限的 Map 就是定时炸弹。
+2. **GC 日志是免费的性能分析工具，很多团队没打开**。JDK 11+ 默认开了，但 JDK 8 默认没开。线上 JDK 8 服务务必加上 `-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/path/gc.log`。
+3. **Full GC 不可怕，可怕的是不知道为什么 Full GC**。必须分析每次 Full GC 的根因——是内存泄漏还是流量突增——然后针对性解决。
+
+**我的建议：**
+- 所有 Java 服务设置 `-XX:+HeapDumpBeforeFullGC`，Full GC 发生时自动 dump
+- 每台服务器放一个 `gc-quick-check.sh`，告警来了先跑一遍
+- GCeasy 的在线报告可以直接分享给组里，省去复述的时间
+
+---
+
+📌 本文是「线上问题排查」系列第 3 篇。下一篇聊：Connection Reset 问题排查——从网络层到应用层，一层层剥开。
