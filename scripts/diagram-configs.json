@@ -55,6 +55,33 @@
       ]
     },
     {
+      "match": {"series": "线上问题排查", "keywords_include": ["Full GC", "GC 日志", "G1"]},
+      "template": "architecture",
+      "style": 1,
+      "title": "Full GC 排查流程",
+      "width": 960,
+      "height": 560,
+      "nodes": [
+        {"id": "alert", "label": "告警响应延迟", "x": 380, "y": 100, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "jstat", "label": "jstat 确认GC频率", "x": 80, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "gclog", "label": "GCeasy 分析日志", "x": 380, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "dump", "label": "jmap dump 转储", "x": 680, "y": 220, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "mat", "label": "MAT 找缓存leak", "x": 80, "y": 360, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "fix", "label": "缩短缓存TTL", "x": 380, "y": 360, "w": 180, "h": 56, "shape": "rounded"},
+        {"id": "verify", "label": "观察GC恢复", "x": 680, "y": 360, "w": 180, "h": 56, "shape": "rounded"}
+      ],
+      "arrows": [
+        {"source": "alert", "target": "jstat", "label": ""},
+        {"source": "alert", "target": "gclog", "label": ""},
+        {"source": "alert", "target": "dump", "label": ""},
+        {"source": "jstat", "target": "mat", "label": ""},
+        {"source": "gclog", "target": "mat", "label": ""},
+        {"source": "dump", "target": "mat", "label": ""},
+        {"source": "mat", "target": "fix", "label": ""},
+        {"source": "fix", "target": "verify", "label": ""}
+      ]
+    },
+    {
       "match": {"series": "Redis", "keywords_include": ["数据类型"]},
       "template": "architecture",
       "style": 1,

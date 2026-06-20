@@ -219,6 +219,19 @@
       },
       "published_at": "2026-06-19T13:31:33.597470+08:00",
       "updated_at": "2026-06-19T13:31:33.597836+08:00"
+    },
+    {
+      "slug": "troubleshoot-3-full-gc",
+      "title": "线上问题排查系列三：一次 Full GC 引发的\\",
+      "source_url": "https://blog.dudu.dev/posts/troubleshoot-3-full-gc",
+      "status": "published",
+      "paths": {
+        "post": "content/posts/troubleshoot-3-full-gc.md",
+        "draft": null,
+        "queue": null
+      },
+      "published_at": "2026-06-20T09:36:57.747478+08:00",
+      "updated_at": "2026-06-20T09:36:57.747820+08:00"
     }
   ],
   "synced_at": "2026-06-15T13:27:03.678322+08:00"
