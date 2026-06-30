@@ -4,236 +4,110 @@ slug = "concurrency-1-threadpoolexecutor"
 keywords = ["线程池", "ThreadPoolExecutor"]
 difficulty = "进阶"
 target_length = 2500
-series_name = "面向面试之并发编程"
+series_name = "面向面试之 并发编程"
 series_number = 1
 series_total = 6
 draft = false
 categories = ["tutorial"]
-date = 2026-06-27
+date = 2026-06-30
 +++
 
-写 Java 的人，面试逃不过线程池。日常开发也逃不过。
+## 线程池这东西，面试必问，线上必用
 
-但说真的，很多人用了好几年线程池，碰到线上问题还是一脸懵——队列满了为啥不抛异常？核心线程数配 8 还是 80？拒绝策略选哪个不丢任务？
+Java 的线程池，可以说是面试里的常客了。从校招到 P8 面都会问，而且问法越来越刁钻。
 
-这篇文章不讲废话，直接掰开线程池的核心参数、拒绝策略、最佳实践。面试够用，干活也够用。
+但说实话，很多人背了参数就能过面试，上线一压就出问题。我见过好几个项目，线程池配得不对，流量一起来直接拒绝请求，事故通报写了两页。
 
----
+这篇不搞虚的，直接从面试+实战两个角度把线程池说透。
 
-## 一、七个核心参数，记不住也得记住
+## 核心参数：就七个字
 
-`ThreadPoolExecutor` 构造器最长有七个参数。不用死背，理解逻辑就能推出来。
+`corePoolSize`、`maximumPoolSize`、`keepAliveTime`、`unit`、`workQueue`、`threadFactory`、`handler`。
 
-```java
-public ThreadPoolExecutor(
-    int corePoolSize,           // 核心线程数
-    int maximumPoolSize,        // 最大线程数
-    long keepAliveTime,         // 空闲线程存活时间
-    TimeUnit unit,              // 时间单位
-    BlockingQueue<Runnable> workQueue,  // 阻塞队列
-    ThreadFactory threadFactory,        // 线程工厂
-    RejectedExecutionHandler handler    // 拒绝策略
-)
-```
+面试官让你说参数，能把这七个背出来只是基本分。关键在于——**你知道每个参数怎么影响行为**。
 
-**参数逻辑记忆法**：
+### corePoolSize 和 maximumPoolSize
 
-1. 线程先建 `corePoolSize` 个，不够用就丢进 `workQueue`
-2. 队列也满了，最多再建 `maximumPoolSize - corePoolSize` 个临时线程
-3. 临时线程空闲 `keepAliveTime` 后回收
-4. 连最大线程都跑满了 → 走 `handler` 拒绝策略
+默认情况下，提交任务时：
+1. 线程数 < `corePoolSize` → 创建新线程
+2. 线程数 >= `corePoolSize` → 任务进队列
+3. 队列满了，且线程数 < `maximumPoolSize` → 创建新线程（直到 max）
+4. 队列满了，且线程数 == `maximumPoolSize` → 执行拒绝策略
 
-就这么简单。**核心数管稳定水位，队列管缓冲，最大线程管峰值，拒绝策略管兜底。**
+有面试经验的人会追问一句：**`prestartAllCoreThreads()` 知道吗？**
 
-## 二、核心参数怎么配？一线踩坑经验
+这个方法会提前把核心线程都启动好，而不是等任务来了才创建。如果你的服务对**首次请求延迟**有要求，或者你明确知道这个池子一定会被大量使用，可以调一下。我自己在压测场景里就用过这个，能省掉启动阶段的线程创建开销。
 
-### 核心线程数
+### workQueue：决定了线程池的性格
 
-网上最常见的公式是 **CPU 密集型 = CPU 核数 + 1，IO 密集型 = CPU 核数 × 2**。理论没问题，但只适合纯计算或纯 IO。
+队列不同，线程池的行为完全不同：
 
-**现实情况是：** 没有纯粹的 CPU 密集型或 IO 密集型。你写的服务里，总有一部分查数据库，一部分做计算，一部分调下游接口。
+- **LinkedBlockingQueue**：默认大小 Integer.MAX_VALUE，任务几乎不会触发创建 max 线程，适合任务量平稳的场景
+- **ArrayBlockingQueue**：有界，到达容量后开始创建 max 线程，适合需要控制背压的场景
+- **SynchronousQueue**：不存任务，直接交给线程。来一个任务如果没空闲线程就尝试创建新线程到 max，适合处理速度极快、任务量忽高忽低的场景
+- **DelayQueue**：定时/延迟任务的专用队列
 
-我自己在线上踩过的坑：把一个风控接口的线程池核心线程数从 8 改到 16，QPS 没涨，RT 翻倍了。因为线程多了，上下文切换抢 CPU，反而更慢。
+我在一个对账系统里用过 ArrayBlockingQueue + 较小的 maxPoolSize。好处是队列满了直接触发拒绝策略，整个流程不会因为堆积太多任务而 OOM。代价是一部分请求会被丢弃，需要在上游做好重试。
 
-**我现在的做法：**
+## 拒绝策略：别只会说 AbortPolicy
 
-- 先压测，找到 RT 和 QPS 的交叉点
-- 用 `- CPU核数 / (1 - 阻塞系数)` 这个公式估算，阻塞系数靠监控算
-- 上线后留告警，慢慢调
+JDK 给了四种：
 
-没有一刀切的配置，**调线程池的本质是调资源分配**。
-
-### 队列选型
-
-| 队列 | 特点 | 适合场景 |
+| 策略 | 行为 | 适用场景 |
 |------|------|----------|
-| `ArrayBlockingQueue` | 有界，公平/非公平 | 能接受有限等待 |
-| `LinkedBlockingQueue` | 有界（默认 Int.MAX！） | 任务之间互相独立 |
-| `SynchronousQueue` | 不存任务，直接交线程 | 高并发、短任务 |
-| `PriorityBlockingQueue` | 优先级排序 | 有优先级的任务 |
+| AbortPolicy | 抛 RejectedExecutionException | 默认，适合必须处理的场景 |
+| CallerRunsPolicy | 提交任务的线程自己跑 | 降低提交速度，适合需要削峰的 |
+| DiscardPolicy | 悄悄丢掉 | 日志不重要可丢的场景 |
+| DiscardOldestPolicy | 丢队列里最老的任务 | 追求新数据、愿意丢弃旧任务的 |
 
-**需要注意：** `LinkedBlockingQueue` 如果不传容量，默认是 `Integer.MAX_VALUE`。这意味着任务可以无限堆积——内存撑爆了都不知道怎么死的。线上务必指定容量。
+有一次我踩过一个坑：用 CallerRunsPolicy，结果回调线程是 Netty 的 IO worker。任务跑太久，IO worker 卡住了，整个服务的连接处理都停了。
 
-### 线程工厂
+**CallerRunsPolicy 不是银弹**，你得搞清楚"调用者"是谁。如果是业务线程池还行，如果是框架的 IO 线程，千万别用。
 
-大部分人不配 `threadFactory`，用默认。默认的坑：线程名是 `pool-1-thread-1`，出问题你连是哪个线程池都不知道。
+## ThreadFactory：最小的自定义点，最大的Debug价值
 
-**自己配一个：**
+默认的线程工厂创建的线程名字是 `pool-1-thread-1`。出问题的时候看线程 dump，完全不知道这个线程在干嘛。
+
+**自定义 ThreadFactory，给线程起一个有意义的名字**，比如 `order-async-worker-%d`。看过一次线上线程 dump 就会知道这个有多重要。
 
 ```java
-new ThreadFactoryBuilder()
-    .setNameFormat("order-async-pool-%d")
+ThreadFactory factory = new ThreadFactoryBuilder()
+    .setNameFormat("my-pool-%d")
     .setDaemon(true)
-    .build()
+    .build();
 ```
 
-Guava 的 `ThreadFactoryBuilder` 一行搞定。线上看线程 dump 一眼就知道是谁家的线程。
+Guava 的 ThreadFactoryBuilder 一行搞定。用 Apache Common 的 BasicThreadFactory 也行。别偷懒省这行代码。
 
----
+## 核心线程数设多少？这不是数学题
 
-## 三、拒绝策略，选错就是线上事故
+网上流传的各种公式（CPU 密集型=N+1，IO 密集型=2N）只能作为起步参考，不能当结论。
 
-JDK 内置四种拒绝策略：
+我自己的经验是：
 
-### 1. AbortPolicy（默认）
+1. **CPU 密集型**：从 `N+1` 开始，压测，看 CPU 利用率。如果 CPU 一直跑不满就加。
+2. **IO 密集型**：从一个比较大的值开始（比如 200），观察线程等待时间和响应时间，反向调整。
+3. **混合型**：现在大部分应用都是这种。用动态线程池或者分不同线程池隔离不同类型任务。
 
-直接抛 `RejectedExecutionException`。最暴力，但也最安全——**你一定会发现任务丢了**。
+**压测才是最终的答案**，任何公式只是起点。你在面试里说"具体看压测数据"比背公式更能拿分。
 
-适合场景：你确定任务绝对不能丢，抛异常后上层有兜底（比如重试队列）。
+## 一个真实的踩坑经历
 
-### 2. CallerRunsPolicy
+去年我接手过一个定时任务系统，每个任务都用自己的线程池，有的池子配了几百个线程。跑了一段时间后系统越来越慢，重启就好。
 
-谁提交任务谁执行。线程池满了，提交线程自己跑。
+查线程 dump 发现：线程数超过 3000+，大部分在 BLOCKED 或者 WAITING 状态。CPU 全花在线程上下文切换上，实际干活的不到 20%。
 
-这招的好处是能反向压提交方。比如线程池满了，HTTP 请求线程自己跑任务——它跑任务去了，就不处理新请求了，自然就限流了。
+最后把线程池统一管理，限制全局线程数在 500 以内，核心业务配单独的隔离池，降配后吞吐反而涨了 40%。
 
-我有个老朋友他们公司的短信发送服务就用这个策略。大促流量冲上来时线程池满，提交线程自己发短信，发完再处理新请求。系统从来没崩过。
+线程不是越多越好。这个教训花了我一个通宵。
 
-### 3. DiscardPolicy
+## 总结一下面试重点
 
-静默丢弃。注意，是**静默**。任务丢了没有任何反馈。
+- 核心参数的作用和执行流程（必须**结合代码讲**）
+- 四种拒绝策略及各自陷阱
+- 线程池大小怎么设（带上压测，别只背公式）
+- 自定义 ThreadFactory 的意义
+- 任务队列如何影响行为（Linked vs Array vs Synchronous）
+- 1 个真实踩坑经历（加分项）
 
-**我个人极度不建议用这个。** 线上丢了什么完全不知道，排查定位困难得要命。
-
-### 4. DiscardOldestPolicy
-
-丢弃队列中等待最久的任务，把位置让给新任务。
-
-适合对时效性敏感的场景。比如实时推荐，老数据发了也没意义，新数据更重要。
-
-### 真实业务场景怎么选？
-
-| 业务类型 | 推荐策略 | 理由 |
-|----------|----------|------|
-| 支付/订单 | AbortPolicy + 重试 | 不能丢，必须兜底 |
-| 日志上报 | DiscardPolicy | 丢几条日志没关系 |
-| 实时推荐 | DiscardOldestPolicy | 老数据过期了 |
-| 通用后台 | CallerRunsPolicy | 反向压一下提交方 |
-
----
-
-## 四、线程池 + 异常处理，一个容易翻车的细节
-
-`execute()` 提交的任务如果抛异常，线程池不会帮你打印。
-
-```java
-threadPool.execute(() -> {
-    int i = 1 / 0;  // 静默失败
-});
-```
-
-这行代码跑完，线程池正常工作，但异常没了。你完全不知道业务对错了。
-
-**经验：** 包装一层，自己打日志。
-
-```java
-threadPool.execute(() -> {
-    try {
-        doBiz();
-    } catch (Exception e) {
-        log.error("业务执行异常", e);
-    }
-});
-```
-
-或者用 `submit()` 代替 `execute()`，拿 `Future.get()` 的时候异常会抛出来。
-
----
-
-## 五、监控比配参数更重要
-
-线程池配对参数只是开始，真正的问题往往在运行后才暴露。
-
-**必须监控的几个指标：**
-
-- **活跃线程数**：持续接近 `maximumPoolSize` 说明瓶颈了
-- **队列积压**：持续上涨说明处理速度跟不上
-- **拒绝次数**：不为 0 就要立刻介入
-- **任务执行耗时**：平均值 + P99，识别慢任务
-
-**怎么监控？**
-
-最简单：用 `ThreadPoolExecutor` 提供的 `getPoolSize()`、`getActiveCount()`、`getQueue().size()` 定时打入监控系统。
-
-Spring Boot 项目直接用 `Micrometer`，一行配置就自带线程池指标。
-
-```yaml
-management.metrics.binders.thread-pool.enabled=true
-```
-
----
-
-## 六、一个完整的线程池封装
-
-最后放一个我在生产用的模板。
-
-```java
-public class ThreadPoolFactory {
-
-    public static ThreadPoolExecutor create(String poolName, int cores, int max, int queueSize) {
-        return new ThreadPoolExecutor(
-            cores,
-            max,
-            60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(queueSize),
-            new ThreadFactoryBuilder().setNameFormat(poolName + "-%d").build(),
-            (r, executor) -> {
-                log.warn("{} 线程池满了，任务提交者自己执行", poolName);
-                r.run();
-            }
-        );
-    }
-}
-```
-
-拒绝策略用 `CallerRunsPolicy` 保底 + 一条 WARN 日志。既不会丢任务，也能在监控系统里看到告警。
-
----
-
-## 面试高频题
-
-### Q：execute() 和 submit() 的区别？
-
-| execute() | submit() |
-|-----------|----------|
-| 无返回值 | 返回 Future |
-| 抛的异常直接吃掉 | 异常放 Future.get() 里 |
-| 参数 Runnable | 参数 Runnable/Callable |
-
-**建议：** 如果你需要知道任务有没有成功，用 `submit()`。堆异常排查比无脑 catch 方便太多了。
-
-### Q：为什么禁止用 Executors 创建线程池？
-
-`Executors.newFixedThreadPool()` 用 `LinkedBlockingQueue` 不设上限，`newCachedThreadPool()` 最大线程数为 `Integer.MAX_VALUE`。
-
-阿里巴巴手册明确禁止——**一个是队列无限撑爆内存，一个是线程无限撑爆 CPU**。老老实实手动配 `ThreadPoolExecutor`。
-
----
-
-## 结尾
-
-线程池不难，但细节多。配错参数、选错队列、不加监控——任何一个环节翻车，线上就是事故。
-
-系列预告：下一篇讲 **AQS 与 Lock**，ReentrantLock 的公平/非公平实现，看完面试不怕问源码。
-
-📌 本文是「面向面试之并发编程」系列第 1 篇
+📌 本文是「面向面试之 并发编程」系列第 1 篇。下一篇我们会深入线程池的源码，看看 execute() 到底是怎么把任务分配出去的。
