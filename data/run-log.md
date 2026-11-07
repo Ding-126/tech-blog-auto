@@ -32,3 +32,15 @@
 **Commit**: aefc518
 **Homepage**: ⚠️ timeout (Vercel cold start), git push triggered auto-deploy
 **Distribution**: WeChat / Zhihu / Toutiao formats generated
+
+## 2026-11-08 05:59 (Cron: daily-tutorial-post → recommend/opinion)
+
+**Status**: ⚠️ 部分成功（博客已发，公众号草稿失败）
+**Post**: content/posts/rec-8-years-crud.md
+**Title**: 写了 8 年 CRUD，我承认我不是高级工程师
+**Type**: recommend / writing_mode=opinion（R04，轮换 index 0→1）
+**Commit**: 9d26825（已 push，触发 Vercel 部署）
+**validate-distribution.sh**: ✅ exit 0（14 项全过，封面 19772 bytes，无链接/无渐变/钩子已注入）
+**WeChat Draft**: ❌ 40164 invalid ip 123.117.38.191 not in whitelist → 需在 mp.weixin.qq.com 设置与开发→基本配置 添加当前出口 IP
+**Diagram**: 跳过（diagram-configs.json 无 opinion 类匹配条目）
+**Note**: rec-33-java-crud.md / question-bank-50.md / content-index.md 等仍在本地未提交
